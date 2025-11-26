@@ -1,0 +1,65 @@
+{% extends "users/base.html" %}
+{% load static %}
+
+{% block header %}
+<div class="row align-items-center py-5">
+    
+    <div class="col-md-7">
+        <h1 class="display-title">Online Voting System</h1>
+
+        <p class="lead-text">
+            A secure, transparent, and user-friendly online voting platform 
+            developed for PG-level academic projects using Python Django and MySQL.
+        </p>
+
+        <div class="mt-4 d-flex gap-2">
+            <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg">Get Started</a>
+            <a href="{% url 'users:login' %}" class="btn btn-outline-primary btn-lg">Login</a>
+        </div>
+
+        <div class="mt-4">
+            <small class="text-muted d-block">College: ASM's IBMR Pune</small>
+            <small class="text-muted d-block">Guide: Mr. Milind Deshkar (HOD, MCA)</small>
+            <small class="text-muted d-block">Students: Rachana Kirange & Prerana Dhake</small>
+            <small class="text-muted d-block">Date: 27/10/2025</small>
+        </div>
+    </div>
+
+    <div class="col-md-5 text-center">
+        <img src="{% static 'img/classdig.jpeg' %}" 
+             alt="College Logo" 
+             class="img-fluid rounded"
+             style="max-height:260px; box-shadow: var(--shadow-soft); border-radius: 12px;">
+    </div>
+
+</div>
+{% endblock %}
+
+
+{% block content %}
+
+<div class="row mt-4 g-4">
+
+    <!-- Card 1 -->
+    <div class="col-md-4">
+        <div class="card-modern p-4">
+            <h5 class="fw-bold">Why Online Voting?</h5>
+            <p class="text-muted">
+                Ensures fairness, speed, transparency, and convenience — eliminating 
+                manual vote counting errors and long queues.
+            </p>
+        </div>
+    </div>
+
+    <!-- Card 2 -->
+    <div class="col-md-4">
+        <div class="card-modern p-4">
+            <h5 class="fw-bold">Key Features</h5>
+            <ul class="text-muted mb-0">
+                <li>Role-Based Authentication</li>
+                <li>Secure Voting & One-Vote Rule</li>
+                <li>Audit Logs & Backup System</li>
+                <li>Modern Dashboards</li>
+            </ul>
+        </div>
+    </div>

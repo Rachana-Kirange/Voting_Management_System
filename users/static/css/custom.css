@@ -1,0 +1,114 @@
+/* Root Theme Variables */
+:root {
+    --primary: #4f46e5;        /* Indigo */
+    --primary-light: #6366f1;
+    --primary-dark: #3730a3;
+
+    --text-dark: #1f2937;
+    --text-muted: #6b7280;
+
+    --bg-light: #f8fafc;
+    --bg-white: #ffffff;
+
+    --shadow-soft: 0 4px 12px rgba(0, 0, 0, 0.08);
+    --shadow-strong: 0 6px 20px rgba(0, 0, 0, 0.12);
+
+    --radius: 14px;
+}
+
+/* Body styling */
+body {
+    background: linear-gradient(180deg, #eef1ff 0%, #f3f4f6 100%);
+    font-family: 'Inter', 'Helvetica Neue', Arial, sans-serif;
+    color: var(--text-dark);
+    padding-bottom: 40px;
+}
+
+/* Navbar modern look */
+.navbar {
+    background: var(--bg-white);
+    box-shadow: var(--shadow-soft);
+}
+
+.navbar-brand {
+    font-weight: 700;
+    font-size: 1.3rem;
+    color: var(--primary) !important;
+}
+
+/* Modern Card */
+.card-modern {
+    border-radius: var(--radius);
+    background: var(--bg-white);
+    border: none;
+    box-shadow: var(--shadow-soft);
+    transition: all 0.25s ease;
+}
+
+.card-modern:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--shadow-strong);
+}
+
+/* Big Title */
+.display-title {
+    font-size: 2.8rem;
+    font-weight: 800;
+    color: var(--primary-dark);
+}
+
+/* Lead Text */
+.lead-text {
+    font-size: 1.1rem;
+    color: var(--text-muted);
+}
+
+/* Button Modern */
+.btn-primary {
+    background: linear-gradient(90deg, var(--primary), var(--primary-light));
+    border: none;
+    padding: 10px 20px;
+    border-radius: 10px;
+    box-shadow: var(--shadow-soft);
+}
+
+.btn-outline-primary {
+    border: 2px solid var(--primary);
+    color: var(--primary);
+    font-weight: 600;
+    padding: 9px 18px;
+    border-radius: 10px;
+}
+
+/* KPI Cards */
+.kpi-number {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--primary-dark);
+}
+
+.kpi-label {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Form Styling */
+.form-card {
+    max-width: 520px;
+    margin: auto;
+    padding: 30px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow-soft);
+}
+
+.form-label {
+    font-weight: 600;
+}
+
+/* Footer */
+.footer-note {
+    margin-top: 18px;
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}

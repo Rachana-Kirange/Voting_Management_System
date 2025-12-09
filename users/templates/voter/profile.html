@@ -1,0 +1,141 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">My Voter Profile</h3>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Profile Info Card -->
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Profile Information</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Username:</label>
+                            <p>{{ voter.user.username }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Email:</label>
+                            <p>{{ voter.user.email }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Full Name:</label>
+                            <p>{{ voter.user.full_name|default:"—" }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Voter ID:</label>
+                            <p>{{ voter.voter_id }}</p>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Mobile:</label>
+                            <p>{{ voter.mobile }}</p>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Address:</label>
+                            <p>{{ voter.address }}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Verification Status Card -->
+            <div class="card mb-4">
+                <div class="card-header {% if voter.is_verified %}bg-success{% else %}bg-warning{% endif %} text-white">
+                    <h5 class="mb-0">Verification Status</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Status:</label>
+                            {% if voter.is_verified %}
+                                <span class="badge bg-success">Verified ✓</span>
+                            {% else %}
+                                <span class="badge bg-warning text-dark">{{ voter.get_verification_status_display }}</span>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="fw-bold">Verified Date:</label>
+                            <p>{% if voter.verification_date %}{{ voter.verification_date|date:"Y-m-d H:i" }}{% else %}—{% endif %}</p>
+                        </div>
+                    </div>
+                    {% if not voter.is_verified %}
+                        <div class="alert alert-warning mb-0">
+                            <strong>Note:</strong> Your account is pending verification by election authorities. You will be able to vote once verified.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Voting History Card -->
+            <div class="card">
+                <div class="card-header bg-info text-white">
+                    <h5 class="mb-0">Your Votes</h5>
+                </div>
+                <div class="card-body">
+                    {% if user_votes %}
+                        <div class="table-responsive">
+                            <table class="table table-sm">
+                                <thead>
+                                    <tr>
+                                        <th>Election</th>
+                                        <th>Candidate</th>
+                                        <th>Party</th>
+                                        <th>Date</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for vote in user_votes %}
+                                    <tr>
+                                        <td>{{ vote.election.title }}</td>
+                                        <td>{{ vote.candidate.name }}</td>
+                                        <td>{{ vote.candidate.party.name }}</td>
+                                        <td>{{ vote.date|date:"Y-m-d H:i" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <p class="text-muted">You have not voted in any elections yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar Actions -->
+        <div class="col-md-4">
+            <div class="card mb-3">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Quick Actions</h5>
+                </div>
+                <div class="card-body d-grid gap-2">
+                    <a href="{% url 'voter_elections_list' %}" class="btn btn-primary">
+                        View Elections
+                    </a>
+                    <a href="{% url 'voter_view_results' %}" class="btn btn-info">
+                        View Results
+                    </a>
+                    <a href="{% url 'voter_notifications' %}" class="btn btn-warning">
+                        Notifications
+                        {% if unread_notifications %}
+                            <span class="badge bg-danger">{{ unread_notifications }}</span>
+                        {% endif %}
+                    </a>
+                    <a href="{% url 'logout' %}" class="btn btn-outline-danger">
+                        Logout
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

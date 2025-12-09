@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Cast Your Vote - {{ election.title }}</h3>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">Election Information</h5>
+                </div>
+                <div class="card-body">
+                    <p><strong>Title:</strong> {{ election.title }}</p>
+                    <p><strong>Type:</strong> {{ election.get_election_type_display }}</p>
+                    <p><strong>Description:</strong> {{ election.description|default:"—" }}</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Select a Candidate</h5>
+                </div>
+                <div class="card-body">
+                    {% if candidates %}
+                        <form method="post" id="vote-form">
+                            {% csrf_token %}
+                            <div class="list-group">
+                                {% for candidate in candidates %}
+                                <label class="list-group-item">
+                                    <input class="form-check-input me-2" type="radio" name="candidate_id" value="{{ candidate.pk }}" required>
+                                    <div>
+                                        <strong>{{ candidate.name }}</strong><br>
+                                        <small class="text-muted">
+                                            Party: {{ candidate.party.name }} | Area: {{ candidate.area }} | Age: {{ candidate.age }}
+                                        </small>
+                                    </div>
+                                </label>
+                                {% endfor %}
+                            </div>
+
+                            <div class="alert alert-warning mt-3">
+                                <strong>⚠️ Important:</strong> This is your one vote for this election. Please choose carefully.
+                            </div>
+
+                            <div class="d-grid gap-2 mt-3">
+                                <button type="submit" class="btn btn-success btn-lg">
+                                    Confirm & Cast Vote
+                                </button>
+                                <a href="{% url 'voter_elections_list' %}" class="btn btn-outline-secondary">
+                                    Cancel
+                                </a>
+                            </div>
+                        </form>
+                    {% else %}
+                        <div class="alert alert-warning">
+                            No approved candidates are available for this election yet.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Info Sidebar -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Voting Guidelines</h5>
+                </div>
+                <div class="card-body">
+                    <ul class="small">
+                        <li>You have <strong>ONE vote</strong> per election</li>
+                        <li>Your vote is <strong>secure and confidential</strong></li>
+                        <li>You <strong>cannot change</strong> your vote after submission</li>
+                        <li>Choose your candidate carefully</li>
+                        <li>Once confirmed, your vote will be recorded</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

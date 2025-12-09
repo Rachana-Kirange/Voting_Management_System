@@ -1,0 +1,81 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Manage Candidates</h3>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <form class="d-flex" method="get">
+        <input name="q" class="form-control form-control-sm me-2" placeholder="Search candidates..." value="{{ q|default_if_none:'' }}" />
+        <select name="party" class="form-select form-select-sm me-2">
+            <option value="">All parties</option>
+            {% for p in parties %}
+            <option value="{{ p.pk }}" {% if p.pk|stringformat:"s" == party_id %}selected{% endif %}>{{ p.name }}</option>
+            {% endfor %}
+        </select>
+        <select name="approved" class="form-select form-select-sm me-2">
+            <option value="">Any</option>
+            <option value="1" {% if approved == '1' %}selected{% endif %}>Approved</option>
+            <option value="0" {% if approved == '0' %}selected{% endif %}>Pending</option>
+        </select>
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Filter</button>
+    </form>
+    <a class="btn btn-primary" href="{% url 'candidate_add' %}">Add Candidate</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Name</th>
+            <th>Approved</th>
+            <th>Party</th>
+            <th>Area</th>
+            <th>Elections</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for c in candidates %}
+        <tr>
+            <td>{{ c.name }}</td>
+            <td>{% if c.is_approved %}<span class="badge bg-success">Yes</span>{% else %}<span class="badge bg-warning text-dark">Pending</span>{% endif %}</td>
+            <td>{{ c.party.name }}</td>
+            <td>{{ c.area }}</td>
+            <td>{% for e in c.elections.all %}{{ e.title }}{% if not forloop.last %}, {% endif %}{% empty %}—{% endfor %}</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'candidate_edit' c.pk %}">Edit</a>
+                {% if not c.is_approved %}
+                    <a class="btn btn-sm btn-success" href="{% url 'candidate_approve' c.pk %}">Approve</a>
+                {% else %}
+                    <a class="btn btn-sm btn-outline-warning" href="{% url 'candidate_unapprove' c.pk %}">Unapprove</a>
+                {% endif %}
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'candidate_delete' c.pk %}">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="4" class="text-center text-muted">No candidates created yet.</td></tr>
+        {% endfor %}
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="candidate-pages">
+    <ul class="pagination pagination-sm justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if party_id %}party={{ party_id }}&{% endif %}{% if approved != None and approved != '' %}approved={{ approved }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if party_id %}party={{ party_id }}&{% endif %}{% if approved != None and approved != '' %}approved={{ approved }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+    </tbody>
+</table>
+{% endblock %}

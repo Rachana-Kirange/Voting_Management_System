@@ -1,0 +1,74 @@
+{% extends 'base.html' %}
+{% block header %}
+<h3 class="py-3">Manage Users</h3>
+{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <form class="d-flex" method="get">
+        <input name="q" class="form-control form-control-sm me-2" placeholder="Search users..." value="{{ q|default_if_none:'' }}" />
+        <select name="role" class="form-select form-select-sm me-2">
+            <option value="">Any role</option>
+            <option value="admin" {% if role == 'admin' %}selected{% endif %}>Admin</option>
+            <option value="voter" {% if role == 'voter' %}selected{% endif %}>Voter</option>
+            <option value="candidate" {% if role == 'candidate' %}selected{% endif %}>Candidate</option>
+        </select>
+        <select name="active" class="form-select form-select-sm me-2">
+            <option value="">Any</option>
+            <option value="1" {% if active == '1' %}selected{% endif %}>Active</option>
+            <option value="0" {% if active == '0' %}selected{% endif %}>Inactive</option>
+        </select>
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Filter</button>
+    </form>
+    <div></div>
+</div>
+
+<table class="table table-hover">
+    <thead>
+        <tr>
+            <th>Username</th>
+            <th>Full name</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Active</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for u in users %}
+        <tr>
+            <td>{{ u.username }}</td>
+            <td>{{ u.full_name|default:'—' }}</td>
+            <td>{{ u.email }}</td>
+            <td>{{ u.get_role_display }}</td>
+            <td>{% if u.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'user_edit' u.pk %}">Edit</a>
+                <a class="btn btn-sm btn-outline-warning" href="{% url 'user_toggle_active' u.pk %}">{% if u.is_active %}Deactivate{% else %}Activate{% endif %}</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted">No users yet.</td></tr>
+        {% endfor %}
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="user-pages">
+    <ul class="pagination pagination-sm justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if role %}role={{ role }}&{% endif %}{% if active != None and active != '' %}active={{ active }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if role %}role={{ role }}&{% endif %}{% if active != None and active != '' %}active={{ active }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Manage Elections</h3>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <form class="d-flex" method="get">
+        <input name="q" class="form-control form-control-sm me-2" placeholder="Search elections..." value="{{ q|default_if_none:'' }}" />
+        <select name="active" class="form-select form-select-sm me-2">
+            <option value="">Any</option>
+            <option value="1" {% if active == '1' %}selected{% endif %}>Active</option>
+            <option value="0" {% if active == '0' %}selected{% endif %}>Inactive</option>
+        </select>
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Filter</button>
+    </form>
+    <a class="btn btn-primary" href="{% url 'election_add' %}">Create Election</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Title</th>
+            <th>Type</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Active</th>
+            <th></th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for e in elections %}
+        <tr>
+            <td>{{ e.title }}</td>
+            <td>{{ e.get_election_type_display }}</td>
+            <td>{{ e.start_date|date:'Y-m-d H:i' }}</td>
+            <td>{{ e.end_date|date:'Y-m-d H:i' }}</td>
+            <td>{% if e.is_active %}<span class="badge bg-success">Active</span>{% else %}<span class="badge bg-secondary">Inactive</span>{% endif %}</td>
+            <td class="text-end">
+                <a class="btn btn-sm btn-outline-secondary" href="{% url 'election_edit' e.pk %}">Edit</a>
+                <a class="btn btn-sm btn-outline-danger" href="{% url 'election_delete' e.pk %}">Delete</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6" class="text-center text-muted">No elections found.</td></tr>
+        {% endfor %}
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="election-pages">
+    <ul class="pagination pagination-sm justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if active != None and active != '' %}active={{ active }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if active != None and active != '' %}active={{ active }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+    </tbody>
+</table>
+{% endblock %}

@@ -1,5 +1,98 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block header %}
+<h2 class="display-title text-center py-3">Admin Dashboard</h2>
+{% endblock %}
+
 {% block content %}
-<h2>Admin Dashboard</h2>
-<p>Manage Elections, Voters, Candidates, Officers.</p>
+
+<div class="row g-4">
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <div class="kpi-number">{{ total_voters }}</div>
+            <div class="kpi-label">Total Voters</div>
+            <p class="text-muted">Manage voters, activate/deactivate accounts.</p>
+            <a href="{% url 'user_list' %}" class="btn btn-primary btn-sm">Manage Users</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <div class="kpi-number">{{ total_candidates }}</div>
+            <div class="kpi-label">Total Candidates</div>
+            <p class="text-muted">Approve and register candidates for elections.</p>
+            <a href="{% url 'candidate_list' %}" class="btn btn-primary btn-sm">Manage Candidates</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <div class="kpi-number">{{ active_elections }}</div>
+            <div class="kpi-label">Active Elections</div>
+            <p class="text-muted">Create, update and publish elections.</p>
+            <a href="{% url 'election_list' %}" class="btn btn-primary btn-sm">Manage Elections</a>
+        </div>
+    </div>
+
+</div>
+
+<div class="row g-4 mt-3">
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <div class="kpi-number">{{ votes_cast }}</div>
+            <div class="kpi-label">Votes Cast</div>
+            <p class="text-muted">Total votes recorded across all elections.</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <div class="kpi-number">{{ pending_verifications }}</div>
+            <div class="kpi-label">Pending Candidate Verifications</div>
+            <p class="text-muted">Candidates awaiting admin approval.</p>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <div class="kpi-number">{{ results_ready }}</div>
+            <div class="kpi-label">Elections Ready for Results</div>
+            <p class="text-muted">Elections that have ended and may have results.</p>
+        </div>
+    </div>
+
+</div>
+
+
+<div class="row g-4 mt-3">
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <h5 class="fw-bold">View Results</h5>
+            <p class="text-muted">Check final election results instantly.</p>
+            <a href="{% url 'results_overview' %}" class="btn btn-primary btn-sm">Open</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <h5 class="fw-bold">Audit Logs</h5>
+            <p class="text-muted">Track all activities and system operations.</p>
+            <a href="{% url 'audit_list' %}" class="btn btn-primary btn-sm">Open</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center">
+            <h5 class="fw-bold">Backup & Restore</h5>
+            <p class="text-muted">Database backup and restoration.</p>
+            <a href="{% url 'backups_list' %}" class="btn btn-primary btn-sm">Open</a>
+        </div>
+    </div>
+
+</div>
+
 {% endblock %}

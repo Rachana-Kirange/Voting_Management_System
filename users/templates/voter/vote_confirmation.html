@@ -1,0 +1,62 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Vote Confirmation</h3>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-7">
+            <div class="card border-success">
+                <div class="card-header bg-success text-white text-center">
+                    <h4 class="mb-0">✓ Your Vote Has Been Recorded</h4>
+                </div>
+                <div class="card-body text-center py-5">
+                    <div class="mb-4">
+                        <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+                    </div>
+
+                    <h5 class="mb-4">Thank you for voting!</h5>
+
+                    <div class="bg-light p-4 rounded mb-4">
+                        <p class="mb-2">
+                            <strong>Election:</strong><br>
+                            {{ election.title }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Your Vote For:</strong><br>
+                            <span class="badge bg-primary" style="font-size: 1rem;">{{ vote.candidate.name }}</span>
+                        </p>
+                        <p class="mb-0">
+                            <strong>Party:</strong><br>
+                            {{ vote.candidate.party.name }}
+                        </p>
+                    </div>
+
+                    <div class="alert alert-info mb-4">
+                        <strong>Confirmation:</strong> A confirmation notification has been sent to your account. Your vote has been securely recorded.
+                    </div>
+
+                    <small class="text-muted d-block mb-4">
+                        <strong>Time:</strong> {{ vote.date|date:"Y-m-d H:i:s" }}
+                    </small>
+
+                    <div class="d-grid gap-2">
+                        <a href="{% url 'voter_elections_list' %}" class="btn btn-primary">
+                            Back to Elections
+                        </a>
+                        <a href="{% url 'voter_profile' %}" class="btn btn-outline-secondary">
+                            Back to Profile
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="alert alert-warning mt-4">
+                <strong>Important:</strong> You have voted once per election. This is the maximum allowed by the system.
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

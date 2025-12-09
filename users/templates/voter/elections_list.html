@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Active Elections</h3>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    {% if not voter.is_verified %}
+    <div class="alert alert-warning">
+        <strong>⚠️ Verification Required:</strong> Your account is not yet verified. You can view elections but cannot vote until verified by authorities.
+    </div>
+    {% endif %}
+
+    {% if elections %}
+        <div class="row">
+            {% for election in elections %}
+            <div class="col-md-6 mb-4">
+                <div class="card h-100">
+                    <div class="card-header bg-primary text-white">
+                        <h5 class="mb-0">{{ election.title }}</h5>
+                    </div>
+                    <div class="card-body">
+                        <p class="mb-2">
+                            <strong>Type:</strong> {{ election.get_election_type_display }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Description:</strong><br>
+                            {{ election.description|default:"—" }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>Start:</strong> {{ election.start_date|date:"Y-m-d H:i" }}
+                        </p>
+                        <p class="mb-2">
+                            <strong>End:</strong> {{ election.end_date|date:"Y-m-d H:i" }}
+                        </p>
+                        <p class="mb-3">
+                            <strong>Candidates:</strong> {{ election.candidates.count }}
+                        </p>
+
+                        {% if election.pk in voted_elections %}
+                            <div class="alert alert-success mb-0">
+                                <strong>✓ You have voted</strong> in this election.
+                                <a href="{% url 'voter_vote_confirmation' election.pk %}" class="ms-2">View Confirmation</a>
+                            </div>
+                        {% else %}
+                            {% if voter.is_verified %}
+                                <a href="{% url 'voter_cast_vote' election.pk %}" class="btn btn-success w-100">
+                                    Cast Your Vote
+                                </a>
+                            {% else %}
+                                <button class="btn btn-secondary w-100" disabled>
+                                    Voting Unavailable (Not Verified)
+                                </button>
+                            {% endif %}
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Pagination -->
+        {% if page_obj.has_other_pages %}
+        <nav aria-label="election-pages" class="mt-4">
+            <ul class="pagination justify-content-center">
+                {% if page_obj.has_previous %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}">Previous</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Previous</span></li>
+                {% endif %}
+
+                <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+                {% if page_obj.has_next %}
+                    <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}">Next</a></li>
+                {% else %}
+                    <li class="page-item disabled"><span class="page-link">Next</span></li>
+                {% endif %}
+            </ul>
+        </nav>
+        {% endif %}
+    {% else %}
+        <div class="alert alert-info">
+            <strong>No Active Elections</strong><br>
+            There are currently no active elections. Check back later.
+        </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'voter_profile' %}" class="btn btn-outline-secondary">Back to Profile</a>
+    </div>
+</div>
+{% endblock %}

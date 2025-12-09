@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Backups</h3>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <form class="d-flex" method="get">
+        <input name="q" class="form-control form-control-sm me-2" placeholder="Search files..." value="{{ q|default_if_none:'' }}" />
+        <select name="success" class="form-select form-select-sm me-2">
+            <option value="">Any</option>
+            <option value="1" {% if success == '1' %}selected{% endif %}>Success</option>
+            <option value="0" {% if success == '0' %}selected{% endif %}>Failed</option>
+        </select>
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Filter</button>
+    </form>
+    <div>
+        <a class="btn btn-outline-primary" href="{% url 'backups_create' %}">Create Backup</a>
+    </div>
+</div>
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>File</th>
+            <th>Performed by</th>
+            <th>Size</th>
+            <th>Time</th>
+            <th>Success</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for r in records %}
+        <tr>
+            <td>{{ r.filename }}</td>
+            <td>{{ r.performed_by }}</td>
+            <td>{% if r.size %}{{ r.size }} bytes{% else %}—{% endif %}</td>
+            <td>{{ r.created_at|date:'Y-m-d H:i' }}</td>
+            <td>{% if r.success %}<span class="badge bg-success">OK</span>{% else %}<span class="badge bg-danger">Failed</span>{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">No backups recorded.</td></tr>
+        {% endfor %}
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="backup-pages">
+    <ul class="pagination pagination-sm justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if success != None and success != '' %}success={{ success }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if success != None and success != '' %}success={{ success }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+    </tbody>
+</table>
+{% endblock %}

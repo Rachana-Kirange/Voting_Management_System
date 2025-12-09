@@ -1,5 +1,40 @@
-{% extends 'base.html' %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block header %}
+<h2 class="display-title text-center py-3">Candidate Dashboard</h2>
+{% endblock %}
+
 {% block content %}
-<h2>Candidate Dashboard</h2>
-<p>View elections in which you are participating.</p>
+
+<div class="row g-4">
+
+    <div class="col-md-6">
+        <div class="card-modern p-4 text-center">
+            <h5 class="fw-bold">Your Profile</h5>
+            <p class="text-muted">Update your candidate profile & party info.</p>
+            <a href="#" class="btn btn-primary btn-sm">Edit</a>
+        </div>
+    </div>
+
+    <div class="col-md-6">
+        <div class="card-modern p-4 text-center">
+            <h5 class="fw-bold">View Voter Feedback</h5>
+            <p class="text-muted">Check comments or feedback if allowed.</p>
+            <a href="#" class="btn btn-primary btn-sm">View</a>
+        </div>
+    </div>
+
+</div>
+
+<div class="row mt-4">
+    <div class="col-md-12">
+        <div class="card-modern p-4 text-center">
+            <h5 class="fw-bold">Election Participation Status</h5>
+            <p class="text-muted">See elections where you are nominated.</p>
+            <a href="#" class="btn btn-primary btn-sm">Check</a>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

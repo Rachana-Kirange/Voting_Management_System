@@ -80,6 +80,26 @@ body {
     border-radius: 10px;
 }
 
+/* Hero layout */
+.hero {
+    background: linear-gradient(135deg, rgba(79,70,229,0.08), rgba(99,102,241,0.03));
+}
+
+.hero-left { max-width: 72%; }
+.hero-right { width: 150px; }
+.hero-illustration { border-radius: 12px; }
+
+/* Quotes */
+.quotes-container { min-height: 130px; display:flex; flex-direction:column; justify-content:center; }
+.quote { font-size: 1.05rem; font-weight:600; color:var(--text-dark); transition: opacity 0.5s ease; }
+.quote-attribution { text-align: right; }
+
+/* small responsive touch */
+@media (max-width: 768px) {
+    .hero-left { max-width: 100%; }
+    .hero-right { display:none; }
+}
+
 /* KPI Cards */
 .kpi-number {
     font-size: 2rem;

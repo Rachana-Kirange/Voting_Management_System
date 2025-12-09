@@ -1,37 +1,63 @@
-{% extends "users/base.html" %}
+{% extends "base.html" %}
 {% load static %}
 
 {% block header %}
 <div class="row align-items-center py-5">
-    
-    <div class="col-md-7">
-        <h1 class="display-title">Online Voting System</h1>
+    <div class="col-md-8 text-start">
+        <div class="card-modern p-5 hero">
+            <div class="d-flex align-items-center gap-4">
+                <div class="hero-left">
+                    <h1 class="display-title mb-2">Online Voting — Secure, Simple, Fair</h1>
+                    <p class="lead-text mb-3">A modern voting platform built for transparency and trust.</p>
 
-        <p class="lead-text">
-            A secure, transparent, and user-friendly online voting platform 
-            developed for PG-level academic projects using Python Django and MySQL.
-        </p>
+                    <div class="d-flex gap-2">
+                        {% if user.is_authenticated %}
+                            {% if user.role == 'admin' %}
+                                <a class="btn btn-primary btn-lg" href="{% url 'admin_dashboard' %}">Go to Admin</a>
+                            {% elif user.role == 'candidate' %}
+                                <a class="btn btn-primary btn-lg" href="{% url 'candidate_dashboard' %}">Go to Candidate</a>
+                            {% else %}
+                                <a class="btn btn-primary btn-lg" href="{% url 'voter_dashboard' %}">Go to Voting</a>
+                            {% endif %}
+                            <a class="btn btn-outline-primary btn-lg" href="{% url 'logout' %}">Logout</a>
+                        {% else %}
+                            <a class="btn btn-primary btn-lg" href="{% url 'login' %}">Login</a>
+                            <a class="btn btn-outline-primary btn-lg" href="{% url 'register' %}">Register</a>
+                        {% endif %}
+                    </div>
 
-        <div class="mt-4 d-flex gap-2">
-            <a href="{% url 'users:register' %}" class="btn btn-primary btn-lg">Get Started</a>
-            <a href="{% url 'users:login' %}" class="btn btn-outline-primary btn-lg">Login</a>
-        </div>
+                </div>
 
-        <div class="mt-4">
-            <small class="text-muted d-block">College: ASM's IBMR Pune</small>
-            <small class="text-muted d-block">Guide: Mr. Milind Deshkar (HOD, MCA)</small>
-            <small class="text-muted d-block">Students: Rachana Kirange & Prerana Dhake</small>
-            <small class="text-muted d-block">Date: 27/10/2025</small>
+                <div class="hero-right d-none d-lg-block">
+                    <!-- subtle shield / graphic -->
+                    <div class="hero-illustration card-modern p-4 text-center">
+                        <div class="display-3 text-primary">🔐</div>
+                        <div class="mt-2 text-muted small">Integrity • Privacy • Audit</div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="col-md-5 text-center">
-        <img src="{% static 'img/classdig.jpeg' %}" 
-             alt="College Logo" 
-             class="img-fluid rounded"
-             style="max-height:260px; box-shadow: var(--shadow-soft); border-radius: 12px;">
+    <div class="col-md-4">
+        <div class="card-modern p-4 quotes-container">
+            <div id="quote" class="quote">“Your vote is your voice — use it wisely.”</div>
+            <div class="quote-attribution text-muted small mt-2">— OnlineVoting Team</div>
+        </div>
     </div>
 
+</div>
+
+<!-- dashboard quick nav (clean, compact) -->
+<div class="row mt-3">
+    <div class="col-12">
+        <nav class="card-modern p-3 d-flex justify-content-center gap-3 align-items-center">
+            <a href="{% url 'admin_dashboard' %}" class="btn btn-sm btn-outline-primary">Admin Dashboard</a>
+            <a href="{% url 'voter_dashboard' %}" class="btn btn-sm btn-outline-primary">Voter Dashboard</a>
+            <a href="{% url 'candidate_dashboard' %}" class="btn btn-sm btn-outline-primary">Candidate Dashboard</a>
+            <!-- Officer dashboard removed from project -->
+        </nav>
+    </div>
 </div>
 {% endblock %}
 
@@ -40,26 +66,103 @@
 
 <div class="row mt-4 g-4">
 
-    <!-- Card 1 -->
     <div class="col-md-4">
         <div class="card-modern p-4">
             <h5 class="fw-bold">Why Online Voting?</h5>
             <p class="text-muted">
-                Ensures fairness, speed, transparency, and convenience — eliminating 
-                manual vote counting errors and long queues.
+                Ensures accuracy, reduces manual errors, and promotes transparency 
+                throughout the election process.
             </p>
         </div>
     </div>
 
-    <!-- Card 2 -->
     <div class="col-md-4">
         <div class="card-modern p-4">
             <h5 class="fw-bold">Key Features</h5>
             <ul class="text-muted mb-0">
                 <li>Role-Based Authentication</li>
-                <li>Secure Voting & One-Vote Rule</li>
-                <li>Audit Logs & Backup System</li>
-                <li>Modern Dashboards</li>
+                <li>Secure Vote Casting</li>
+                <li>Audit Logs Tracking</li>
+                <li>Backup & Restore Module</li>
             </ul>
         </div>
     </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4">
+            <h5 class="fw-bold">Technologies Used</h5>
+            <p class="text-muted mb-0">
+                Python · Django · MySQL · HTML · CSS · Bootstrap  
+                with modern UI layout for a professional project interface.
+            </p>
+        </div>
+    </div>
+
+</div>
+
+<!-- Features grid -->
+<div id="features" class="row mt-5 g-4" style="display:none;">
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center h-100">
+            <div class="fs-1 mb-2">🗳️</div>
+            <h5 class="fw-bold">Cast Secure Votes</h5>
+            <p class="text-muted">Voters can cast votes securely; every action is recorded for auditability.</p>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'voter_dashboard' %}">Go to Voting</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center h-100">
+            <div class="fs-1 mb-2">📋</div>
+            <h5 class="fw-bold">Manage Candidates</h5>
+            <p class="text-muted">Admins can approve and maintain candidate listings for upcoming elections.</p>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'admin_dashboard' %}">Manage Candidates</a>
+        </div>
+    </div>
+
+    <div class="col-md-4">
+        <div class="card-modern p-4 text-center h-100">
+            <div class="fs-1 mb-2">🔍</div>
+            <h5 class="fw-bold">Audit & Results</h5>
+            <p class="text-muted">Monitor activity logs and view trustworthy, transparent results at a glance.</p>
+            <a class="btn btn-sm btn-outline-primary mt-2" href="{% url 'admin_dashboard' %}">View Results</a>
+        </div>
+    </div>
+</div>
+
+<div class="mt-5 card-modern p-4">
+    <h5 class="fw-bold">Project Summary</h5>
+    <p class="text-muted mb-0">
+        The system handles complete election management — user registration, 
+        login, candidate verification, vote casting, result publishing, audit logging, 
+        and backup/restore operations with transparency and security.
+    </p>
+    <div class="mt-3 text-end small text-muted">Built with Python, Django, and Bootstrap</div>
+</div>
+
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    (function(){
+        const container = document.getElementById('quote');
+        if (!container) return;
+        const quotes = [
+            'Your vote is your voice — use it with courage and care.',
+            'Integrity in voting builds stronger communities.',
+            'Small actions — like voting — produce big changes.',
+            'Vote not because you must, but because your voice matters.'
+        ];
+        let i = 0;
+        function showNext(){
+            i = (i + 1) % quotes.length;
+            container.style.opacity = 0;
+            setTimeout(()=>{
+                container.textContent = '“' + quotes[i] + '”';
+                container.style.opacity = 1;
+            }, 400);
+        }
+        setInterval(showNext, 5000);
+    })();
+</script>
+{% endblock %}

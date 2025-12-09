@@ -1,0 +1,18 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">{{ title }}</h3>
+{% endblock %}
+
+{% block content %}
+<div class="card-modern p-4" style="max-width:640px">
+    <form method="POST">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="d-flex justify-content-end gap-2">
+            <a href="{% url 'party_list' %}" class="btn btn-outline-secondary">Cancel</a>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

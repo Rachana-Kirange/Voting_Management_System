@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% block header %}
+<h3 class="py-3">Results — {{ election.title }}</h3>
+{% endblock %}
+
+{% block content %}
+<table class="table table-striped">
+    <thead>
+        <tr><th>Candidate</th><th>Party</th><th>Votes</th></tr>
+    </thead>
+    <tbody>
+        {% for c in stats %}
+        <tr>
+            <td>{{ c.candidate__name }}</td>
+            <td>{{ c.candidate__party__name }}</td>
+            <td>{{ c.votes }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="3" class="text-center text-muted">No votes recorded yet.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+{% endblock %}

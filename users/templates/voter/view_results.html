@@ -1,0 +1,118 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Election Results</h3>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <!-- Results Display -->
+        <div class="col-md-8">
+            {% if election %}
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">{{ election.title }}</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-2">
+                        <strong>Status:</strong> 
+                        {% if election.end_date <= now %}
+                            <span class="badge bg-success">Concluded</span>
+                        {% else %}
+                            <span class="badge bg-warning text-dark">Ongoing</span>
+                        {% endif %}
+                    </p>
+                    <p class="mb-2">
+                        <strong>Voting Period:</strong> {{ election.start_date|date:"Y-m-d H:i" }} to {{ election.end_date|date:"Y-m-d H:i" }}
+                    </p>
+                    <p>
+                        <strong>Description:</strong> {{ election.description|default:"—" }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Results Table -->
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0">Results</h5>
+                </div>
+                <div class="card-body">
+                    {% if stats %}
+                        <div class="table-responsive">
+                            <table class="table table-hover">
+                                <thead>
+                                    <tr>
+                                        <th>Rank</th>
+                                        <th>Candidate</th>
+                                        <th>Party</th>
+                                        <th>Votes</th>
+                                        <th>Progress</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for item in stats %}
+                                    <tr>
+                                        <td><strong>{{ forloop.counter }}</strong></td>
+                                        <td>{{ item.candidate__name }}</td>
+                                        <td>{{ item.candidate__party__name }}</td>
+                                        <td><span class="badge bg-primary">{{ item.votes }}</span></td>
+                                        <td>
+                                            <div class="progress" style="height: 20px;">
+                                                <div class="progress-bar" role="progressbar" 
+                                                     style="width: {% widthratio item.votes stats|length 100 %}%;" 
+                                                     aria-valuenow="{{ item.votes }}" aria-valuemin="0" aria-valuemax="100">
+                                                    {% widthratio item.votes stats|length 100 %}%
+                                                </div>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    {% else %}
+                        <div class="alert alert-info">
+                            No votes have been cast yet for this election.
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <strong>No Published Results</strong><br>
+                    There are no published results available yet. Results are published after elections conclude.
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Sidebar - Election Selection -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-dark text-white">
+                    <h5 class="mb-0">Published Elections</h5>
+                </div>
+                <div class="card-body p-0">
+                    {% if published_elections %}
+                        <div class="list-group list-group-flush">
+                            {% for e in published_elections %}
+                            <a href="{% url 'voter_view_results_election' e.pk %}" 
+                               class="list-group-item list-group-item-action {% if e.pk == election.pk %}active{% endif %}">
+                                <strong>{{ e.title }}</strong><br>
+                                <small class="text-muted">Ended: {{ e.end_date|date:"Y-m-d" }}</small>
+                            </a>
+                            {% endfor %}
+                        </div>
+                    {% else %}
+                        <p class="text-muted p-3">No concluded elections yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="mt-4">
+        <a href="{% url 'voter_profile' %}" class="btn btn-outline-secondary">Back to Profile</a>
+    </div>
+</div>
+{% endblock %}

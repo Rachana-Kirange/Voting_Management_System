@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Voter Registration</h3>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-5" style="max-width: 500px;">
+    <div class="card">
+        <div class="card-body">
+            <h5 class="card-title mb-4">Complete Your Voter Registration</h5>
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="voter_id" class="form-label">Voter ID *</label>
+                    <input type="text" class="form-control" id="voter_id" name="voter_id" required>
+                    <small class="form-text text-muted">Your unique voter identification number</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="mobile" class="form-label">Mobile Number *</label>
+                    <input type="tel" class="form-control" id="mobile" name="mobile" required>
+                    <small class="form-text text-muted">Format: 10-15 digits</small>
+                </div>
+
+                <div class="mb-3">
+                    <label for="address" class="form-label">Address *</label>
+                    <textarea class="form-control" id="address" name="address" rows="3" required></textarea>
+                    <small class="form-text text-muted">Your registered address</small>
+                </div>
+
+                <div class="alert alert-info mb-3">
+                    <strong>Note:</strong> Your registration will be verified by election authorities before you can vote.
+                </div>
+
+                <div class="d-grid gap-2">
+                    <button type="submit" class="btn btn-primary">Submit Registration</button>
+                    <a href="{% url 'voter_profile' %}" class="btn btn-outline-secondary">Back to Profile</a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

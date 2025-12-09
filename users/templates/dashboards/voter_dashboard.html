@@ -1,5 +1,62 @@
 {% extends 'base.html' %}
 {% block content %}
-<h2>Voter Dashboard</h2>
-<p>View elections and cast your vote.</p>
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <h2 class="mb-4">Voter Dashboard</h2>
+            
+            {% if user.is_authenticated %}
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="card text-center border-primary">
+                            <div class="card-body">
+                                <h5 class="card-title">My Profile</h5>
+                                <p class="card-text">View your profile and verification status</p>
+                                <a href="{% url 'voter_profile' %}" class="btn btn-primary">Go to Profile</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card text-center border-success">
+                            <div class="card-body">
+                                <h5 class="card-title">Active Elections</h5>
+                                <p class="card-text">View and participate in elections</p>
+                                <a href="{% url 'voter_elections_list' %}" class="btn btn-success">View Elections</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card text-center border-info">
+                            <div class="card-body">
+                                <h5 class="card-title">Results</h5>
+                                <p class="card-text">View published election results</p>
+                                <a href="{% url 'voter_view_results' %}" class="btn btn-info">View Results</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="card text-center border-warning">
+                            <div class="card-body">
+                                <h5 class="card-title">Notifications</h5>
+                                <p class="card-text">Check your notifications and alerts</p>
+                                <a href="{% url 'voter_notifications' %}" class="btn btn-warning">View Notifications</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <a href="{% url 'logout' %}" class="btn btn-outline-danger">Logout</a>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    Please <a href="{% url 'login' %}">log in</a> to access the voter portal.
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
 {% endblock %}

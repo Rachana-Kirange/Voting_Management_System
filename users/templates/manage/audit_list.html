@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Audit Logs</h3>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between mb-3">
+    <form class="d-flex" method="get">
+        <input name="q" class="form-control form-control-sm me-2" placeholder="Search model or target..." value="{{ q|default_if_none:'' }}" />
+        <select name="action" class="form-select form-select-sm me-2">
+            <option value="">Any action</option>
+            <option value="create" {% if action == 'create' %}selected{% endif %}>Create</option>
+            <option value="update" {% if action == 'update' %}selected{% endif %}>Update</option>
+            <option value="delete" {% if action == 'delete' %}selected{% endif %}>Delete</option>
+            <option value="backup" {% if action == 'backup' %}selected{% endif %}>Backup</option>
+            <option value="other" {% if action == 'other' %}selected{% endif %}>Other</option>
+        </select>
+        <button class="btn btn-outline-secondary btn-sm" type="submit">Filter</button>
+    </form>
+</div>
+
+<table class="table table-sm">
+    <thead>
+        <tr>
+            <th>Time</th>
+            <th>Action</th>
+            <th>Actor</th>
+            <th>Target</th>
+            <th>Details</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for l in logs %}
+        <tr>
+            <td>{{ l.created_at|date:'Y-m-d H:i' }}</td>
+            <td>{{ l.get_action_display }}</td>
+            <td>{{ l.actor }}</td>
+            <td>{{ l.target_model }} — {{ l.target_repr }}</td>
+            <td>{{ l.details }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="5" class="text-center text-muted">No logs yet.</td></tr>
+        {% endfor %}
+
+{% if page_obj.has_other_pages %}
+<nav aria-label="audit-pages">
+    <ul class="pagination pagination-sm justify-content-center">
+        {% if page_obj.has_previous %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if action %}action={{ action }}&{% endif %}page={{ page_obj.previous_page_number }}">Previous</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        <li class="page-item disabled"><span class="page-link">Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}</span></li>
+
+        {% if page_obj.has_next %}
+            <li class="page-item"><a class="page-link" href="?{% if q %}q={{ q }}&{% endif %}{% if action %}action={{ action }}&{% endif %}page={{ page_obj.next_page_number }}">Next</a></li>
+        {% else %}
+            <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+{% endif %}
+    </tbody>
+</table>
+{% endblock %}

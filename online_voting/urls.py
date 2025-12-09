@@ -1,19 +1,8 @@
 from django.contrib import admin
 from django.urls import path, include
-from django.http import HttpResponse
-
-# Temporary dashboard views (we'll replace later)
-def admin_dashboard(request):
-    return HttpResponse("Admin Dashboard")
-
-def voter_dashboard(request):
-    return HttpResponse("Voter Dashboard")
-
-def candidate_dashboard(request):
-    return HttpResponse("Candidate Dashboard")
-
-def officer_dashboard(request):
-    return HttpResponse("Poll Officer Dashboard")
+from django.conf import settings
+from django.conf.urls.static import static
+from django.shortcuts import redirect
 
 
 urlpatterns = [
@@ -22,9 +11,11 @@ urlpatterns = [
     # include users app URLs
     path('users/', include('users.urls')),
 
-    # dashboards
-    path('admin_dashboard/', admin_dashboard, name='admin_dashboard'),
-    path('voter_dashboard/', voter_dashboard, name='voter_dashboard'),
-    path('candidate_dashboard/', candidate_dashboard, name='candidate_dashboard'),
-    path('officer_dashboard/', officer_dashboard, name='officer_dashboard'),
+    # root: send user to the right place depending on auth status
+    path('', lambda request: redirect('users_home') if request.user.is_authenticated else redirect('login')),
+
+    # dashboards are provided by the users app (see users/urls.py)
 ]
+
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

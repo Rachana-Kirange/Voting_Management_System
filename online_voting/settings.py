@@ -26,8 +26,17 @@ SECRET_KEY = 'django-insecure-=3ewj+n^s4!(i(ucby&^@t8anu1hutbwxab!sx9!#w!jij^+3y
 DEBUG = True
 
 ALLOWED_HOSTS = []
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+# DEFAULT_FROM_EMAIL = 'admin@votingsystem.com'  # Or your domain
 
-
+# For production (real emails, e.g., via Gmail):
+# EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+# EMAIL_HOST = 'smtp.gmail.com'
+# EMAIL_PORT = 587
+# EMAIL_USE_TLS = True
+# EMAIL_HOST_USER = 'yourgmail@gmail.com'
+# EMAIL_HOST_PASSWORD = 'your-app-password'  # Use app password if 2FA enabled
+# DEFAULT_FROM_EMAIL = 'Voting System <yourgmail@gmail.com>'
 # Application definition
 
 INSTALLED_APPS = [

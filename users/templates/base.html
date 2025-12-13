@@ -4,79 +4,302 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Online Voting System</title>
+    <title>{% block title %}Online Voting System{% endblock %}</title>
 
-    <!-- Bootstrap -->
+    <!-- Google Fonts: Poppins for modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Bootstrap 5 -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 
-    <!-- Custom CSS -->
-    <link rel="stylesheet" href="{% static 'css/custom.css' %}">
+    <style>
+        /* --- 1. GLOBAL VARIABLES & RESET --- */
+        :root {
+            --primary-grad: linear-gradient(90deg, #4cc9f0, #4361ee);
+            --glass-bg: rgba(20, 20, 35, 0.6);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+            --text-color: #ffffff;
+            --text-muted: rgba(255, 255, 255, 0.7);
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background: linear-gradient(-45deg, #0f0c29, #302b63, #24243e);
+            background-size: 400% 400%;
+            animation: gradientBG 15s ease infinite;
+            min-height: 100vh;
+            color: var(--text-color);
+            display: flex;
+            flex-direction: column;
+        }
+
+        @keyframes gradientBG {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* --- 2. ADVANCED NAVBAR --- */
+        .glass-navbar {
+            background: var(--glass-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-bottom: var(--glass-border);
+            padding: 15px 0;
+            position: sticky; /* Sticks to top */
+            top: 0;
+            z-index: 1000;
+            transition: all 0.3s ease;
+        }
+
+        .navbar-brand {
+            font-weight: 700;
+            font-size: 1.5rem;
+            color: #fff !important;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+        }
+
+        .navbar-brand i {
+            background: var(--primary-grad);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            font-size: 1.8rem;
+            margin-right: 10px;
+        }
+
+        /* Navigation Links */
+        .nav-link {
+            color: var(--text-muted) !important;
+            font-weight: 500;
+            font-size: 0.95rem;
+            margin: 0 12px;
+            position: relative;
+            transition: 0.3s;
+        }
+
+        .nav-link:hover, .nav-link.active {
+            color: #fff !important;
+        }
+
+        /* Animated Underline */
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 50%;
+            background: var(--primary-grad);
+            transition: all 0.3s ease-in-out;
+            transform: translateX(-50%);
+        }
+
+        .nav-link:hover::after {
+            width: 100%;
+        }
+
+        /* Mobile Toggler */
+        .navbar-toggler {
+            border: none;
+            color: rgba(255,255,255,0.8);
+        }
+        .navbar-toggler:focus {
+            box-shadow: none;
+        }
+
+        /* --- 3. DROPDOWN MENU (Dark Mode) --- */
+        .dropdown-menu {
+            background: rgba(30, 30, 45, 0.95); /* Solid dark background for readability */
+            backdrop-filter: blur(10px);
+            border: var(--glass-border);
+            border-radius: 10px;
+            margin-top: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            padding: 10px;
+        }
+
+        .dropdown-item {
+            color: var(--text-muted);
+            border-radius: 5px;
+            padding: 10px 15px;
+            transition: 0.2s;
+        }
+
+        .dropdown-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+            padding-left: 20px; /* Slide effect */
+        }
+        
+        .dropdown-divider {
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+
+        /* User Profile in Nav */
+        .user-pill {
+            display: flex;
+            align-items: center;
+            background: rgba(255,255,255,0.1);
+            padding: 5px 15px 5px 5px;
+            border-radius: 30px;
+            transition: 0.3s;
+        }
+        .user-pill:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .user-avatar {
+            width: 32px;
+            height: 32px;
+            background: var(--primary-grad);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 10px;
+            font-size: 14px;
+            color: white;
+            font-weight: bold;
+        }
+
+        /* Register Button */
+        .btn-register {
+            background: var(--primary-grad);
+            color: white !important;
+            border-radius: 20px;
+            padding: 8px 25px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+            border: none;
+        }
+        .btn-register:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(67, 97, 238, 0.5);
+        }
+        .btn-register::after { display: none; } /* Remove underline from this specific link */
+
+        /* --- 4. LAYOUT HELPERS --- */
+        .main-content {
+            flex: 1; /* Pushes footer down */
+            padding-bottom: 50px;
+        }
+
+        /* Alerts */
+        .alert-custom {
+            border-radius: 10px;
+            border: none;
+            background: rgba(255, 255, 255, 0.9);
+            color: #333;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- NAVBAR -->
-    <nav class="navbar navbar-expand-lg navbar-light px-4">
-        <a class="navbar-brand" href="#">Online Voting</a>
+    <!-- NAVBAR START -->
+    <nav class="navbar navbar-expand-lg glass-navbar">
+        <div class="container"> <!-- 'container' keeps it centered nicely -->
+            
+            <!-- LOGO -->
+            <a class="navbar-brand" href="{% url 'users_home' %}">
+                <i class="fas fa-check-circle"></i> VOTE<span style="font-weight: 300;">SYS</span>
+            </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
-            data-bs-target="#navbarNav" aria-controls="navbarNav" 
-            aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+            <!-- MOBILE TOGGLE BUTTON -->
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+                data-bs-target="#navbarContent" aria-controls="navbarContent" 
+                aria-expanded="false" aria-label="Toggle navigation">
+                <i class="fas fa-bars fa-lg"></i>
+            </button>
 
-        <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav ms-auto">
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'users_home' %}">Home</a>
-                </li>
+            <!-- NAV LINKS -->
+            <div class="collapse navbar-collapse" id="navbarContent">
+                <ul class="navbar-nav ms-auto align-items-center">
+                    
+                    <li class="nav-item">
+                        <a class="nav-link" href="{% url 'users_home' %}">Home</a>
+                    </li>
 
-                {% if user.is_authenticated %}
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        {{ user.username }}
-                    </a>
-                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
-                        {% if user.role == 'admin' %}
-                            <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}">Dashboard</a></li>
-                        {% elif user.role == 'candidate' %}
-                            <li><a class="dropdown-item" href="{% url 'candidate_dashboard' %}">Dashboard</a></li>
-                        {% else %}
-                            <li><a class="dropdown-item" href="{% url 'voter_dashboard' %}">Dashboard</a></li>
-                        {% endif %}
-                        <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item text-danger" href="{% url 'logout' %}">Logout</a></li>
-                    </ul>
-                </li>
-                {% else %}
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'login' %}">Login</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link" href="{% url 'register' %}">Register</a>
-                </li>
-                {% endif %}
+                    {% if user.is_authenticated %}
+                        <!-- LOGGED IN STATE -->
+                        <li class="nav-item dropdown ms-lg-3">
+                            <a class="nav-link dropdown-toggle user-pill" href="#" id="userDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                <div class="user-avatar">
+                                    {{ user.username|slice:":1"|upper }}
+                                </div>
+                                <span class="text-white">{{ user.username }}</span>
+                            </a>
+                            
+                            <ul class="dropdown-menu dropdown-menu-end animate__animated animate__fadeIn" aria-labelledby="userDropdown">
+                                <!-- Dashboard Routing Logic -->
+                                {% if user.role == 'admin' %}
+                                    <li><a class="dropdown-item" href="{% url 'admin_dashboard' %}"><i class="fas fa-tachometer-alt me-2 text-info"></i> Admin Dashboard</a></li>
+                                {% elif user.role == 'candidate' %}
+                                    <li><a class="dropdown-item" href="{% url 'candidate_dashboard' %}"><i class="fas fa-user-tie me-2 text-warning"></i> Candidate Dashboard</a></li>
+                                {% else %}
+                                    <li><a class="dropdown-item" href="{% url 'voter_dashboard' %}"><i class="fas fa-vote-yea me-2 text-success"></i> Voter Dashboard</a></li>
+                                {% endif %}
+                                
+                                <li><hr class="dropdown-divider"></li>
+                                <li>
+                                    <a class="dropdown-item text-danger" href="{% url 'logout' %}">
+                                        <i class="fas fa-sign-out-alt me-2"></i> Logout
+                                    </a>
+                                </li>
+                            </ul>
+                        </li>
 
-            </ul>
+                    {% else %}
+                        <!-- GUEST STATE -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'login' %}">Login</a>
+                        </li>
+                        <li class="nav-item ms-lg-2 mt-2 mt-lg-0">
+                            <a class="nav-link btn-register" href="{% url 'register' %}">Get Started</a>
+                        </li>
+                    {% endif %}
+
+                </ul>
+            </div>
         </div>
     </nav>
+    <!-- NAVBAR END -->
 
 
-    <!-- HEADER SECTION -->
+    <!-- PAGE HEADER -->
     <div class="container mt-4">
-        {% block header %}
-        {% endblock %}
+        {% block header %}{% endblock %}
     </div>
 
 
     <!-- MAIN CONTENT -->
-    <div class="container mt-3">
-        {% block content %}
-        {% endblock %}
+    <div class="container mt-3 main-content">
+        
+        <!-- MESSAGES -->
+        {% if messages %}
+            {% for message in messages %}
+                <div class="alert alert-custom alert-dismissible fade show mb-4" role="alert">
+                    {% if message.tags == 'error' %}
+                        <i class="fas fa-exclamation-circle text-danger me-2"></i>
+                    {% else %}
+                        <i class="fas fa-check-circle text-success me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            {% endfor %}
+        {% endif %}
+
+        {% block content %}{% endblock %}
     </div>
 
 
-    <!-- Bootstrap JS -->
+    <!-- JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     {% block extra_js %}{% endblock %}
 

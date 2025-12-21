@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<h2>Vote for: {{ election.name }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+    {% for candidate in candidates %}
+        <div>
+            <input type="radio" name="candidate" value="{{ candidate.id }}" required>
+            {{ candidate.name }} ({{ candidate.party.name }})
+        </div>
+    {% empty %}
+        <p>No candidates registered for this election yet.</p>
+    {% endfor %}
+    <button type="submit">Cast Vote</button>
+</form>
+
+{% endblock %}

@@ -94,6 +94,16 @@ class Candidate(models.Model):
     def __str__(self):
         return f"{self.name} ({self.party.name})"
 
+
+class Campaign(models.Model):
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    election = models.ForeignKey("elections.Election", on_delete=models.CASCADE)
+    message = models.TextField()
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.candidate.user.username} - {self.election.title}"
+
 # -----------------------------------------
 # 3. VOTER TABLE
 # -----------------------------------------
@@ -106,9 +116,9 @@ class Voter(models.Model):
 
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
     voter_id = models.CharField(max_length=20, unique=True)
-    mobile = models.CharField(max_length=15)
+    mobile_no = models.CharField(max_length=15)
     address = models.TextField()
-    has_voted = models.BooleanField(default=False)
+
     is_verified = models.BooleanField(default=False)
     verification_status = models.CharField(max_length=20, choices=VERIFICATION_STATUS_CHOICES, default='pending')
     verification_date = models.DateTimeField(null=True, blank=True)
@@ -120,14 +130,20 @@ class Voter(models.Model):
 # 4. VOTE TABLE
 # -----------------------------------------
 class Vote(models.Model):
-    # one voter can cast many votes (one vote per election is enforced by unique_together)
     voter = models.ForeignKey(Voter, on_delete=models.CASCADE)
-    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
-    election = models.ForeignKey('elections.Election', on_delete=models.CASCADE, null=True, blank=True)
+    candidate = models.ForeignKey(
+        Candidate, 
+        on_delete=models.CASCADE, 
+        related_name='user_votes'  # <-- add this
+    )
+    election = models.ForeignKey(
+        'elections.Election', 
+        on_delete=models.CASCADE, 
+        null=True, 
+        blank=True, 
+        related_name='user_votes'  # <-- add this
+    )
     date = models.DateTimeField(auto_now_add=True)
-
-    def __str__(self):
-        return f"{self.voter.user.username} → {self.candidate.name}"
 
     class Meta:
         constraints = [
@@ -161,3 +177,5 @@ class Notification(models.Model):
 
     def __str__(self):
         return f"{self.voter.user.username} - {self.title}"
+
+from elections.models import Election

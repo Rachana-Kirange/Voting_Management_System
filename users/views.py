@@ -1,23 +1,26 @@
-from django.shortcuts import render, redirect
-from django.contrib.auth import authenticate, login, logout
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
-from django.contrib.auth import get_user_model
 from django.contrib.auth.views import (
     PasswordResetView,
     PasswordResetDoneView,
     PasswordResetConfirmView,
     PasswordResetCompleteView,
 )
-from django.urls import reverse_lazy
 from django.utils import timezone
-
+from django.urls import reverse_lazy
 # Your app-specific imports (adjust if models/forms are in different apps)
 from .decorators import admin_required
-from .forms import PartyForm, CandidateForm, CustomUserChangeForm
-from .models import Party, Candidate, Voter
+from .forms import PartyForm, CandidateForm, CustomUserChangeForm, VoterRegistrationForm , CampaignForm
+from .models import Party, Candidate, Voter, Vote, Election,Campaign
 from elections.models import Election
 from elections.forms import ElectionForm
+from django.contrib.auth.decorators import login_required
+from elections.models import Election
 
+from django.contrib.admin.views.decorators import staff_member_required
+
+from django.core.paginator import Paginator
 
 def home_view(request):
     return render(request, 'home.html')
@@ -132,9 +135,50 @@ def voter_dashboard(request):
     return render(request, "dashboards/voter_dashboard.html")
 
 
+@login_required
 def candidate_dashboard(request):
-    return render(request, "dashboards/candidate_dashboard.html")
+    if request.user.profile.role != 'candidate':
+        return redirect('user_dashboard')  # or voter dashboard
 
+    context = {
+        'user': request.user
+    }
+    return render(request, 'dashboards/candidate_dashboard.html', context)
+
+
+@login_required
+def candidate_campaign(request):
+    if request.user.profile.role != 'candidate':
+        return redirect('user_dashboard')
+
+    campaign, created = Campaign.objects.get_or_create(
+        candidate=request.user
+    )
+
+    if request.method == 'POST':
+        form = CampaignForm(request.POST, instance=campaign)
+        if form.is_valid():
+            form.save()
+            return redirect('candidate_dashboard')
+    else:
+        form = CampaignForm(instance=campaign)
+
+    return render(request, 'campaign/candidate_campaign.html', {
+        'form': form
+    })
+
+def view_campaigns(request):
+    campaigns = Campaign.objects.select_related('candidate')
+    return render(request, 'campaign/view_campaigns.html', {
+        'campaigns': campaigns
+    })
+
+@login_required
+def candidate_elections(request):
+    elections = Election.objects.filter(is_active=True)
+    return render(request, 'voter/elections_list.html', {
+        'elections': elections
+    })
 
 def logout_view(request):
     logout(request)
@@ -167,110 +211,74 @@ def voter_elections_list(request):
     if not request.user.is_authenticated:
         return redirect('login')
     
-    from django.utils import timezone
-    
     try:
         voter = Voter.objects.get(user=request.user)
     except Voter.DoesNotExist:
         messages.warning(request, 'Please register as a voter first.')
         return redirect('voter_register')
     
+    # Check if voter is verified
+    if not voter.is_verified:
+        messages.warning(
+            request,
+            "⚠️ Verification Required: Your account is not yet verified. "
+            "You can view elections but cannot vote until verified by authorities."
+        )
+
     # Get active and upcoming elections
     now = timezone.now()
     elections = Election.objects.filter(is_active=True).order_by('start_date')
     
-    # Get voters' votes for this election
-    from .models import Vote
+    # Get elections where voter has already voted
     voted_elections = Vote.objects.filter(voter=voter).values_list('election_id', flat=True)
     
-    from django.core.paginator import Paginator
+    # Pagination
     page = request.GET.get('page', 1)
     paginator = Paginator(elections, 10)
     page_obj = paginator.get_page(page)
     
-    ctx = {
+    context = {
         'voter': voter,
         'elections': page_obj,
         'page_obj': page_obj,
         'voted_elections': list(voted_elections),
     }
-    return render(request, 'voter/elections_list.html', ctx)
-def voter_elections_list(request):
-    """Show active and upcoming elections available to voters."""
-    if not request.user.is_authenticated:
-        return redirect('login')
-    
-    from django.utils import timezone
-    
-    try:
-        voter = Voter.objects.get(user=request.user)
-    except Voter.DoesNotExist:
-        messages.warning(request, 'Please register as a voter first.')
-        return redirect('voter_register')
-    
-    # Get active and upcoming elections
-    now = timezone.now()
-    elections = Election.objects.filter(is_active=True).order_by('start_date')
-    
-    # Get voters' votes for this election
-    from .models import Vote
-    voted_elections = Vote.objects.filter(voter=voter).values_list('election_id', flat=True)
-    
-    from django.core.paginator import Paginator
-    page = request.GET.get('page', 1)
-    paginator = Paginator(elections, 10)
-    page_obj = paginator.get_page(page)
-    
-    ctx = {
-        'voter': voter,
-        'elections': page_obj,
-        'page_obj': page_obj,
-        'voted_elections': list(voted_elections),
-    }
-    return render(request, 'voter/elections_list.html', ctx)
+    return render(request, 'voter/elections_list.html', context)
+
+
 
 def voter_view_results(request, election_id=None):
-    """View published election results."""
-    if not request.user.is_authenticated:
-        return redirect('login')
-    
-    from django.utils import timezone
-    
-    try:
-        voter = Voter.objects.get(user=request.user)
-    except Voter.DoesNotExist:
-        return redirect('voter_register')
-    
-    # Get published elections (end_date passed)
-    now = timezone.now()
-    published = Election.objects.filter(end_date__lt=now).order_by('-end_date')
-    
+    # Get all concluded elections
+    published_elections = Election.objects.filter(end_date__lte=timezone.now()).order_by('-end_date')
+
+    election = None
+    stats = None
+    total_votes = 0
+
     if election_id:
-        election = get_object_or_404(Election, pk=election_id, end_date__lt=now)
-    else:
-        election = published.first()
-    
-    if not election:
-        messages.info(request, 'No published results available yet.')
-        return redirect('voter_elections_list')
-    
-    # Get results for this election
-    from .models import Vote
-    from django.db.models import Count
-    stats = (
-        Vote.objects.filter(election=election)
-        .values('candidate__id', 'candidate__name', 'candidate__party__name')
-        .annotate(votes=Count('id'))
-        .order_by('-votes')
-    )
-    
-    ctx = {
-        'voter': voter,
+        election = get_object_or_404(Election, pk=election_id)
+        # Aggregate votes per candidate
+        votes_qs = Vote.objects.filter(candidate__election=election).values(
+            'candidate__name', 'candidate__party__name'
+        ).annotate(votes_count=models.Count('id')).order_by('-votes_count')
+
+        stats = [
+            {'candidate__name': v['candidate__name'],
+             'candidate__party__name': v['candidate__party__name'],
+             'votes': v['votes_count']}
+            for v in votes_qs
+        ]
+
+        total_votes = sum(v['votes'] for v in stats) if stats else 0
+
+    context = {
+        'published_elections': published_elections,
         'election': election,
         'stats': stats,
-        'published_elections': published,
+        'total_votes': total_votes,
+        'now': timezone.now(),
     }
-    return render(request, 'voter/view_results.html', ctx)
+    return render(request, 'voter/view_results.html', context)
 
 def voter_notifications(request):
     """View all voter notifications."""
@@ -303,6 +311,94 @@ def voter_notifications(request):
     }
     return render(request, 'voter/notifications.html', ctx)
 
+@login_required
+def voter_register(request):
+    if hasattr(request.user, 'voter'):
+        messages.info(request, "You have already registered as a voter.")
+        return redirect('voter_dashboard')
+
+    if request.method == 'POST':
+        form = VoterRegistrationForm(request.POST)
+        if form.is_valid():
+            voter = form.save(commit=False)
+            voter.user = request.user
+            voter.is_verified = False
+            voter.save()
+            messages.success(
+                request,
+                "Registration submitted. Await admin verification."
+            )
+            return redirect('voter_dashboard')
+    else:
+        form = VoterRegistrationForm()
+
+    return render(request, 'users/voter_register.html', {'form': form})
+
+def voter_view_results_election(request, election_id):
+    election = Election.objects.get(id=election_id)
+
+    stats = (
+        Vote.objects
+        .filter(election=election)
+        .values(
+            'candidate__name',
+            'candidate__party__name'
+        )
+        .annotate(votes=Count('id'))
+        .order_by('-votes')
+    )
+
+    published_elections = Election.objects.filter(
+        end_date__lte=timezone.now()
+    )
+
+    context = {
+        'election': election,
+        'stats': stats,
+        'published_elections': published_elections,
+        'now': timezone.now(),
+    }
+
+    return render(request, 'voter/view_result.html', context)
+
+
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404
+from django.utils import timezone
+from django.contrib import messages
+from .models import Voter, Candidate, Election, Vote
+
+@login_required
+def voter_cast_vote(request, election_id):
+    voter = get_object_or_404(Voter, user=request.user)
+    election = get_object_or_404(Election, pk=election_id)
+
+    # Ensure election is active
+    now = timezone.now()
+    if not (election.start_date <= now <= election.end_date):
+        messages.warning(request, "Voting for this election is not currently open.")
+        return redirect('voter_elections_list')
+
+    candidates = Candidate.objects.filter(election=election, is_approved=True)
+
+    if request.method == "POST":
+        candidate_id = request.POST.get('candidate_id')
+        if candidate_id:
+            candidate = get_object_or_404(Candidate, pk=candidate_id)
+            # Check if voter already voted
+            if Vote.objects.filter(voter=voter, election=election).exists():
+                messages.error(request, "You have already voted in this election.")
+            else:
+                Vote.objects.create(voter=voter, candidate=candidate, election=election)
+                messages.success(request, f"You have successfully voted for {candidate.name}.")
+            return redirect('voter_elections_list')
+
+    context = {
+        'election': election,
+        'candidates': candidates,
+    }
+    return render(request, 'voter/cast_vote.html', context)
+
 # ==================== PASSWORD RESET VIEWS ====================
 
 class CustomPasswordResetView(PasswordResetView):
@@ -324,3 +420,47 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
+
+
+@staff_member_required
+def verify_voters(request):
+    voters = Voter.objects.filter(is_verified=False)
+    
+    if request.method == "POST":
+        voter_id = request.POST.get('voter_id')
+        voter = get_object_or_404(Voter, id=voter_id)
+        voter.is_verified = True
+        voter.save()
+        messages.success(request, f'{voter.user.username} has been verified.')
+        return redirect('verify_voters')
+    
+    return render(request, 'users/verify_voters.html', {'voters': voters})
+
+
+
+def voter_view_results_election(request, election_id):
+    election = Election.objects.get(id=election_id)
+
+    stats = (
+        Vote.objects
+        .filter(election=election)
+        .values(
+            'candidate__name',
+            'candidate__party__name'
+        )
+        .annotate(votes=Count('id'))
+        .order_by('-votes')
+    )
+
+    published_elections = Election.objects.filter(
+        end_date__lte=timezone.now()
+    )
+
+    context = {
+        'election': election,
+        'stats': stats,
+        'published_elections': published_elections,
+        'now': timezone.now(),
+    }
+
+    return render(request, 'voter/view_result.html', context)

@@ -1,0 +1,16 @@
+<h2>Vote in {{ election.title }}</h2>
+
+<form method="post">
+    {% csrf_token %}
+
+    {% for candidate in candidates %}
+        <div>
+            <input type="radio" name="candidate_id" value="{{ candidate.id }}" required>
+            {{ candidate.name }} ({{ candidate.party.name }})
+        </div>
+    {% empty %}
+        <p>No candidates available.</p>
+    {% endfor %}
+
+    <button type="submit">Submit Vote</button>
+</form>

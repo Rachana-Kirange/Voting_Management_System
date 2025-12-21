@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h3 class="text-center">Candidate Campaigns</h3>
+
+{% for c in campaigns %}
+<div class="card p-3 mt-3">
+    <h5>{{ c.candidate.username }} ({{ c.party_name }})</h5>
+    <p>{{ c.manifesto }}</p>
+</div>
+{% empty %}
+<p>No campaigns available.</p>
+{% endfor %}
+{% endblock %}

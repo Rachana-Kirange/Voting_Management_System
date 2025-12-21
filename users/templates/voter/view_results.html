@@ -60,9 +60,9 @@
                                         <td>
                                             <div class="progress" style="height: 20px;">
                                                 <div class="progress-bar" role="progressbar" 
-                                                     style="width: {% widthratio item.votes stats|length 100 %}%;" 
-                                                     aria-valuenow="{{ item.votes }}" aria-valuemin="0" aria-valuemax="100">
-                                                    {% widthratio item.votes stats|length 100 %}%
+                                                     style="width: {{ item.votes|div:total_votes|floatformat:2 }}%;" 
+                                                     aria-valuenow="{{ item.votes }}" aria-valuemin="0" aria-valuemax="{{ total_votes }}">
+                                                    {{ item.votes|div:total_votes|floatformat:2 }}%
                                                 </div>
                                             </div>
                                         </td>
@@ -86,7 +86,7 @@
             {% endif %}
         </div>
 
-        <!-- Sidebar - Election Selection -->
+        <!-- Sidebar - Published Elections -->
         <div class="col-md-4">
             <div class="card">
                 <div class="card-header bg-dark text-white">
@@ -97,7 +97,7 @@
                         <div class="list-group list-group-flush">
                             {% for e in published_elections %}
                             <a href="{% url 'voter_view_results_election' e.pk %}" 
-                               class="list-group-item list-group-item-action {% if e.pk == election.pk %}active{% endif %}">
+                               class="list-group-item list-group-item-action {% if election and e.pk == election.pk %}active{% endif %}">
                                 <strong>{{ e.title }}</strong><br>
                                 <small class="text-muted">Ended: {{ e.end_date|date:"Y-m-d" }}</small>
                             </a>

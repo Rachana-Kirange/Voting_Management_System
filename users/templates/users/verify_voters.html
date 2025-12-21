@@ -1,0 +1,30 @@
+<h2>Pending Voter Verifications</h2>
+
+{% if voters %}
+    <table border="1">
+        <tr>
+            <th>Username</th>
+            <th>Voter ID</th>
+            <th>Mobile No</th>
+            <th>Address</th>
+            <th>Action</th>
+        </tr>
+        {% for voter in voters %}
+        <tr>
+            <td>{{ voter.user.username }}</td>
+            <td>{{ voter.voter_id }}</td>
+            <td>{{ voter.mobile_no }}</td>
+            <td>{{ voter.address }}</td>
+            <td>
+                <form method="post" style="display:inline;">
+                    {% csrf_token %}
+                    <input type="hidden" name="voter_id" value="{{ voter.id }}">
+                    <button type="submit">Verify</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+{% else %}
+    <p>No pending voters.</p>
+{% endif %}

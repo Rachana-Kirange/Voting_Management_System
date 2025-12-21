@@ -32,7 +32,14 @@
         <div class="card-modern p-4 text-center">
             <h5 class="fw-bold">Election Participation Status</h5>
             <p class="text-muted">See elections where you are nominated.</p>
-            <a href="#" class="btn btn-primary btn-sm">Check</a>
+            <button class="btn btn-secondary btn-sm" disabled>
+    Coming Soon
+</button>
+<a href="{% url 'candidate_campaign' %}"
+   class="btn btn-primary btn-sm">
+   Manage Campaign
+</a>
+
         </div>
     </div>
 </div>

@@ -1,0 +1,18 @@
+<h2>Active Elections</h2>
+
+{% if elections %}
+    <ul>
+        {% for election in elections %}
+            <li>
+                <strong>{{ election.title }}</strong><br>
+                {{ election.start_date }} – {{ election.end_date }}<br>
+
+                <a href="{% url 'cast_vote' election.id %}">
+                    Vote
+                </a>
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>No active elections right now.</p>
+{% endif %}

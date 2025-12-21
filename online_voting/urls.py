@@ -14,6 +14,10 @@ urlpatterns = [
     # root: send user to the right place depending on auth status
     path('', lambda request: redirect('users_home') if request.user.is_authenticated else redirect('login')),
 
+    path('voting/', include('voting.urls')),
+
+    path('elections/', include('elections.urls')),
+
     # dashboards are provided by the users app (see users/urls.py)
 ]
 

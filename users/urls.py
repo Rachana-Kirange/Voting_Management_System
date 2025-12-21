@@ -1,6 +1,6 @@
 from django.urls import path
 from . import views
-
+from .views import voter_cast_vote
 urlpatterns = [
     path('', views.home_view, name='users_home'),   # corrected
     path('login/', views.login_page, name='login'),
@@ -50,4 +50,22 @@ urlpatterns = [
     path('reset_password_sent/', views.CustomPasswordResetDoneView.as_view(), name='password_reset_done'),
     path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset_password_complete/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
+    path('voter/register/', views.voter_register, name='voter_register'),
+    # users/urls.py
+
+path(
+    'voter/results/<int:election_id>/',
+    views.voter_view_results_election,
+    name='voter_view_results_election'
+),
+
+
+path('voter/election/<int:election_id>/vote/', voter_cast_vote, name='voter_cast_vote'),
+path(
+    'candidate/campaign/',
+    views.candidate_campaign,
+    name='candidate_campaign'
+),
+path('campaigns/', views.view_campaigns, name='view_campaigns'),
+
 ]

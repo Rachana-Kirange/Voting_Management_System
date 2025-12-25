@@ -16,15 +16,14 @@
                 </div>
                 <div class="card-body">
                     <p class="mb-2">
-                        <strong>Status:</strong> 
-                        {% if election.end_date <= now %}
-                            <span class="badge bg-success">Concluded</span>
-                        {% else %}
+                        <strong>Status:</strong>
+                        {% if election.end_date <= now %} <span class="badge bg-success">Concluded</span>
+                            {% else %}
                             <span class="badge bg-warning text-dark">Ongoing</span>
-                        {% endif %}
+                            {% endif %}
                     </p>
                     <p class="mb-2">
-                        <strong>Voting Period:</strong> {{ election.start_date|date:"Y-m-d H:i" }} to {{ election.end_date|date:"Y-m-d H:i" }}
+                        <strong>Voting Period:</strong> {{ election.start_date|date:"Y-m-d H:i" }} to {{election.end_date|date:"Y-m-d H:i" }}
                     </p>
                     <p>
                         <strong>Description:</strong> {{ election.description|default:"—" }}
@@ -32,57 +31,58 @@
                 </div>
             </div>
 
-            <!-- Results Table -->
             <div class="card">
                 <div class="card-header bg-success text-white">
                     <h5 class="mb-0">Results</h5>
                 </div>
                 <div class="card-body">
                     {% if stats %}
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Rank</th>
-                                        <th>Candidate</th>
-                                        <th>Party</th>
-                                        <th>Votes</th>
-                                        <th>Progress</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for item in stats %}
-                                    <tr>
-                                        <td><strong>{{ forloop.counter }}</strong></td>
-                                        <td>{{ item.candidate__name }}</td>
-                                        <td>{{ item.candidate__party__name }}</td>
-                                        <td><span class="badge bg-primary">{{ item.votes }}</span></td>
-                                        <td>
-                                            <div class="progress" style="height: 20px;">
-                                                <div class="progress-bar" role="progressbar" 
-                                                     style="width: {{ item.votes|div:total_votes|floatformat:2 }}%;" 
-                                                     aria-valuenow="{{ item.votes }}" aria-valuemin="0" aria-valuemax="{{ total_votes }}">
-                                                    {{ item.votes|div:total_votes|floatformat:2 }}%
-                                                </div>
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Rank</th>
+                                    <th>Candidate</th>
+                                    <th>Party</th>
+                                    <th>Votes</th>
+                                    <th>Progress</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in stats %}
+                                <tr>
+                                    <td><strong>{{ forloop.counter }}</strong></td>
+                                    <td>{{ item.candidate__name }}</td>
+                                    <td>{{ item.candidate__party__name }}</td>
+                                    <td><span class="badge bg-primary">{{ item.votes }}</span></td>
+                                    <td>
+                                        <div class="progress" style="height: 20px;">
+                                            <div class="progress-bar" role="progressbar"
+                                                style="width: {{ item.percentage|floatformat:1 }}%;"
+                                                aria-valuenow="{{ item.votes }}" aria-valuemin="0"
+                                                aria-valuemax="{{ total_votes }}">
+
+                                                {{ item.percentage|floatformat:1 }}%
                                             </div>
-                                        </td>
-                                    </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-                        </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                     {% else %}
-                        <div class="alert alert-info">
-                            No votes have been cast yet for this election.
-                        </div>
+                    <div class="alert alert-info">
+                        No votes have been cast yet for this election.
+                    </div>
                     {% endif %}
                 </div>
             </div>
             {% else %}
-                <div class="alert alert-warning">
-                    <strong>No Published Results</strong><br>
-                    There are no published results available yet. Results are published after elections conclude.
-                </div>
+            <div class="alert alert-warning">
+                <strong>No Published Results</strong><br>
+                There are no published results available yet. Results are published after elections conclude.
+            </div>
             {% endif %}
         </div>
 
@@ -94,17 +94,17 @@
                 </div>
                 <div class="card-body p-0">
                     {% if published_elections %}
-                        <div class="list-group list-group-flush">
-                            {% for e in published_elections %}
-                            <a href="{% url 'voter_view_results_election' e.pk %}" 
-                               class="list-group-item list-group-item-action {% if election and e.pk == election.pk %}active{% endif %}">
-                                <strong>{{ e.title }}</strong><br>
-                                <small class="text-muted">Ended: {{ e.end_date|date:"Y-m-d" }}</small>
-                            </a>
-                            {% endfor %}
-                        </div>
+                    <div class="list-group list-group-flush">
+                        {% for e in published_elections %}
+                        <a href="{% url 'voter_view_results_election' e.pk %}"
+                            class="list-group-item list-group-item-action {% if election and e.pk == election.pk %}active{% endif %}">
+                            <strong>{{ e.title }}</strong><br>
+                            <small class="text-muted">Ended: {{ e.end_date|date:"Y-m-d" }}</small>
+                        </a>
+                        {% endfor %}
+                    </div>
                     {% else %}
-                        <p class="text-muted p-3">No concluded elections yet.</p>
+                    <p class="text-muted p-3">No concluded elections yet.</p>
                     {% endif %}
                 </div>
             </div>

@@ -1,8 +1,8 @@
+
 from django.contrib import admin
 from django.contrib.auth.admin import UserAdmin as DjangoUserAdmin
-from .models import CustomUser, Party, Candidate, Voter, Vote, Notification
+from .models import CustomUser, Voter, Notification
 from .forms import CustomUserCreationForm, CustomUserChangeForm
-
 
 @admin.register(CustomUser)
 class CustomUserAdmin(DjangoUserAdmin):
@@ -34,16 +34,6 @@ class CustomUserAdmin(DjangoUserAdmin):
     )
 
 
-@admin.register(Party)
-class PartyAdmin(admin.ModelAdmin):
-    list_display = ('name',)
-
-
-@admin.register(Candidate)
-class CandidateAdmin(admin.ModelAdmin):
-    list_display = ('name', 'party', 'age', 'area')
-
-
 @admin.register(Voter)
 class VoterAdmin(admin.ModelAdmin):
     list_display = ('user', 'voter_id', 'mobile_no', 'is_verified')
@@ -53,11 +43,8 @@ class VoterAdmin(admin.ModelAdmin):
 
     def verify_voters(self, request, queryset):
         queryset.update(is_verified=True)
+        self.message_user(request, "Selected voters have been verified.")
     verify_voters.short_description = "Mark selected voters as Verified"
-
-@admin.register(Vote)
-class VoteAdmin(admin.ModelAdmin):
-    list_display = ('voter', 'candidate', 'date')
 
 
 @admin.register(Notification)

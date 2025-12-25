@@ -8,7 +8,6 @@
 {% block content %}
 
 <div class="row g-4">
-
     <div class="col-md-4">
         <div class="card-modern p-4 text-center">
             <div class="kpi-number">{{ total_voters }}</div>
@@ -35,11 +34,9 @@
             <a href="{% url 'election_list' %}" class="btn btn-primary btn-sm">Manage Elections</a>
         </div>
     </div>
-
 </div>
 
 <div class="row g-4 mt-3">
-
     <div class="col-md-4">
         <div class="card-modern p-4 text-center">
             <div class="kpi-number">{{ votes_cast }}</div>
@@ -51,7 +48,7 @@
     <div class="col-md-4">
         <div class="card-modern p-4 text-center">
             <div class="kpi-number">{{ pending_verifications }}</div>
-            <div class="kpi-label">Pending Candidate Verifications</div>
+            <div class="kpi-label">Pending Verifications</div>
             <p class="text-muted">Candidates awaiting admin approval.</p>
         </div>
     </div>
@@ -59,16 +56,56 @@
     <div class="col-md-4">
         <div class="card-modern p-4 text-center">
             <div class="kpi-number">{{ results_ready }}</div>
-            <div class="kpi-label">Elections Ready for Results</div>
+            <div class="kpi-label">Elections Ready</div>
             <p class="text-muted">Elections that have ended and may have results.</p>
         </div>
     </div>
-
 </div>
 
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card shadow-sm border-warning">
+            <div class="card-header bg-warning text-dark">
+                <h5 class="mb-0 fw-bold">⚠️ Pending Results Publication</h5>
+            </div>
+            <div class="card-body">
+                {% if concluded_unpublished_elections %}
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Election Title</th>
+                                    <th>Ended On</th>
+                                    <th class="text-end">Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for election in concluded_unpublished_elections %}
+                                <tr>
+                                    <td><strong>{{ election.title }}</strong></td>
+                                    <td>{{ election.end_date|date:"M d, Y H:i" }}</td>
+                                    <td class="text-end">
+                                        <form action="{% url 'publish_results' election.id %}" method="POST" style="display:inline;">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-success btn-sm fw-bold">
+                                                Publish Results 🚀
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <p class="text-muted mb-0">No concluded elections are waiting for publication.</p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
 
 <div class="row g-4 mt-3">
-
     <div class="col-md-4">
         <div class="card-modern p-4 text-center">
             <h5 class="fw-bold">View Results</h5>
@@ -92,7 +129,6 @@
             <a href="{% url 'backups_list' %}" class="btn btn-primary btn-sm">Open</a>
         </div>
     </div>
-
 </div>
 
 {% endblock %}

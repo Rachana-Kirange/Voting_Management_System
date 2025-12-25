@@ -43,6 +43,49 @@ def login_page(request):
 
     return render(request, 'login.html')
 
+
+
+# def register_page(request):
+#     if request.user.is_authenticated:
+#         return redirect('users_home')
+
+#     User = get_user_model()
+
+#     if request.method == 'POST':
+#         username = request.POST.get('username')
+#         email = request.POST.get('email')
+#         role = request.POST.get('role')  
+#         full_name = request.POST.get('full_name')
+#         password1 = request.POST.get('password1')
+#         password2 = request.POST.get('password2')
+
+#         if password1 != password2:
+#             messages.error(request, 'Passwords do not match.')
+#             return render(request, 'register.html')
+
+#         if User.objects.filter(username=username).exists():
+#             messages.error(request, 'Username already taken.')
+#             return render(request, 'register.html')
+
+#         try:
+#             user = User.objects.create_user(
+#                 username=username, email=email or '', password=password1
+#             )
+#             if hasattr(user, 'role') and role:
+#                 user.role = role
+#             if hasattr(user, 'full_name') and full_name:
+#                 user.full_name = full_name
+#             user.save()
+
+#             messages.success(request, 'Account created! Please log in.')
+#             return redirect('login')
+#         except Exception as e:
+#             messages.error(request, 'An error occurred during registration.')
+#             print(e)
+
+#     return render(request, 'register.html')
+# users/views.py
+
 def register_page(request):
     if request.user.is_authenticated:
         return redirect('users_home')
@@ -66,6 +109,7 @@ def register_page(request):
             return render(request, 'register.html')
 
         try:
+            # 1. Create the User
             user = User.objects.create_user(
                 username=username, email=email or '', password=password1
             )
@@ -75,11 +119,38 @@ def register_page(request):
                 user.full_name = full_name
             user.save()
 
+            # 2. Automatically create the Profile based on Role
+            if role == 'candidate':
+                # FIX: Get or create a default "Independent" party to satisfy the database rule
+                default_party, created = Party.objects.get_or_create(
+                    name="Independent", 
+                    defaults={'name': "Independent"} # Add other required fields if Party has them
+                )
+
+                Candidate.objects.create(
+                    user=user, 
+                    name=full_name if full_name else username,
+                    age=25,  # Default age
+                    area="Pending Assignment",
+                    party=default_party # ✅ ASSIGN THE PARTY HERE
+                )
+
+            elif role == 'voter':
+                import uuid
+                Voter.objects.create(
+                    user=user,
+                    voter_id=str(uuid.uuid4())[:10].upper()
+                )
+
             messages.success(request, 'Account created! Please log in.')
             return redirect('login')
+
         except Exception as e:
-            messages.error(request, 'An error occurred during registration.')
-            print(e)
+            # If an error happens (like missing Party fields), print it and delete the user
+            print(f"Registration Error: {e}")
+            if 'user' in locals():
+                user.delete() # Clean up the broken user
+            messages.error(request, f'Registration failed: {e}')
 
     return render(request, 'register.html')
 
@@ -92,14 +163,25 @@ def logout_view(request):
 
 @login_required
 def candidate_dashboard(request):
+    # 1. Check if user is a candidate
     if hasattr(request.user, 'role') and request.user.role != 'candidate':
-        return redirect('home')
+        return redirect('users_home')
 
-    candidate = get_object_or_404(Candidate, user=request.user)
+    # 2. Get the Candidate profile
+    try:
+        candidate = get_object_or_404(Candidate, user=request.user)
+    except:
+        # If profile is missing, redirect safely instead of crashing
+        messages.error(request, "Candidate profile not found.")
+        return redirect('users_home')
+
     campaigns = Campaign.objects.filter(candidate=candidate)
 
-    return render(request, 'candidate/dashboard.html', {
-        'candidate': candidate, 'campaigns': campaigns
+    # ✅ FIXED: The path now matches your file location
+    # users/templates/dashboards/candidate_dashboard.html
+    return render(request, 'dashboards/candidate_dashboard.html', {
+        'candidate': candidate,
+        'campaigns': campaigns
     })
 
 @login_required
@@ -377,6 +459,23 @@ def voter_view_results(request):
 
     return render(request, 'voter/view_results.html', context)
 
+@login_required
+def candidate_dashboard(request):
+    if hasattr(request.user, 'role') and request.user.role != 'candidate':
+        messages.error(request, "Access restricted to candidates only.")
+        return redirect('users_home')
+    try:
+        candidate = Candidate.objects.get(user=request.user)
+    except Candidate.DoesNotExist:
+        messages.warning(request, "Your Candidate Profile is not set up yet. Please contact the Admin.")
+        return redirect('users_home')
+
+    campaigns = Campaign.objects.filter(candidate=candidate)
+
+    return render(request, 'dashboards/candidate_dashboard.html', {
+        'candidate': candidate, 
+        'campaigns': campaigns
+    })
 
 class CustomPasswordResetView(PasswordResetView):
     template_name = 'registration/password_reset_form.html'

@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>My Campaigns</h2>
+
+{% if campaigns %}
+    <ul>
+        {% for campaign in campaigns %}
+            <li>
+                <strong>{{ campaign.election.title }}</strong><br>
+                {{ campaign.message }}
+            </li>
+        {% endfor %}
+    </ul>
+{% else %}
+    <p>You have not created any campaigns yet.</p>
+{% endif %}
+
+{% endblock %}

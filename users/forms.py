@@ -44,5 +44,10 @@ class VoterRegistrationForm(forms.ModelForm):
 class CampaignForm(forms.ModelForm):
     class Meta:
         model = Campaign
-        fields = ['message']
-
+        fields = ['election', 'message']
+        widgets = {
+            'message': forms.Textarea(attrs={
+                'rows': 4,
+                'placeholder': 'Write your campaign message...'
+            })
+        }

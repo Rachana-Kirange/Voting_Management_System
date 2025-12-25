@@ -3,7 +3,7 @@ from django.conf import settings
 from django.contrib.auth.base_user import AbstractBaseUser, BaseUserManager
 from django.contrib.auth.models import PermissionsMixin
 from django.utils import timezone
-
+from elections.models import Election
 
 class CustomUserManager(BaseUserManager):
     """Custom user manager where username and email are required fields."""
@@ -178,4 +178,13 @@ class Notification(models.Model):
     def __str__(self):
         return f"{self.voter.user.username} - {self.title}"
 
-from elections.models import Election
+
+
+class VoterVote(models.Model):
+    voter = models.ForeignKey(Voter, on_delete=models.CASCADE)
+    candidate = models.ForeignKey(Candidate, on_delete=models.CASCADE)
+    election = models.ForeignKey(Election, on_delete=models.CASCADE)
+    voted_on = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.voter.user.get_full_name()} voted for {self.candidate.user.get_full_name()}"

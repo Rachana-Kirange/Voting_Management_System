@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Available Elections</h2>
+
+<ul>
+{% for election in elections %}
+    <li>
+        <strong>{{ election.title }}</strong><br>
+        Start: {{ election.start_date }} <br>
+        End: {{ election.end_date }}
+    </li>
+{% empty %}
+    <li>No elections available.</li>
+{% endfor %}
+</ul>
+
+<a href="{% url 'candidate_dashboard' %}">Back to Dashboard</a>
+{% endblock %}

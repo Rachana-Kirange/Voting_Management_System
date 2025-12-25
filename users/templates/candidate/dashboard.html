@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Candidate Dashboard</h2>
+
+<p>Welcome, {{ request.user.username }}</p>
+
+<ul>
+    <li><a href="{% url 'candidate_elections' %}">View Elections</a></li>
+    
+</ul>
+<a href="{% url 'my_campaigns' %}" class="btn btn-primary btn-sm">
+    My Campaigns
+</a>
+<a href="{% url 'create_campaign' %}" class="btn btn-success btn-sm">
+    Create Campaign
+</a>
+
+{% endblock %}

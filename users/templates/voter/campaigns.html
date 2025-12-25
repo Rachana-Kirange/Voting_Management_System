@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+
+{% block header %}
+<h3 class="py-3">Campaigns for {{ election.title }}</h3>
+{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+
+    {% if campaigns %}
+        <div class="row">
+            {% for campaign in campaigns %}
+  <div class="campaign-card">
+    <h3>{{ campaign.candidate.name }}</h3>
+    <p>Party: {{ campaign.candidate.party.name }}</p>
+
+    {% if campaign.candidate.id in voted_candidate_ids %}
+      <button type="button" disabled class="btn btn-secondary">
+        Already Voted
+      </button>
+    {% else %}
+      <form method="POST" action="{% url 'voter_cast_vote' election.id %}">
+        {% csrf_token %}
+        <input type="hidden" name="candidate_id" value="{{ campaign.candidate.id }}">
+        <button type="submit" class="btn btn-primary">
+          Vote Now
+        </button>
+      </form>
+    {% endif %}
+  </div>
+{% endfor %}
+
+
+        </div>
+    {% else %}
+        <div class="alert alert-info">
+            <strong>No campaigns available</strong> for this election yet.
+        </div>
+    {% endif %}
+
+    <div class="mt-4">
+        <a href="{% url 'voter_elections_list' %}" class="btn btn-outline-secondary">Back to Elections</a>
+    </div>
+
+</div>
+{% endblock %}

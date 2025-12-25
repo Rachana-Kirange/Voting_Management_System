@@ -1,3 +1,12 @@
+<style>
+.election-card {
+    border: 1px solid #ddd;
+    padding: 15px;
+    margin-bottom: 12px;
+    border-radius: 6px;
+}
+
+</style>
 {% extends 'base.html' %}
 
 {% block header %}
@@ -15,41 +24,25 @@
     {% if elections %}
         <div class="row">
             {% for election in elections %}
-            <div class="col-md-6 mb-4">
-                <div class="card h-100">
-                    <div class="card-header bg-primary text-white">
-                        <h5 class="mb-0">{{ election.title }}</h5>
-                    </div>
-                    <div class="card-body">
-                        <p class="mb-2"><strong>Type:</strong> {{ election.get_election_type_display }}</p>
-                        <p class="mb-2"><strong>Description:</strong><br>{{ election.description|default:"—" }}</p>
-                        <p class="mb-2"><strong>Start:</strong> {{ election.start_date|date:"Y-m-d H:i" }}</p>
-                        <p class="mb-2"><strong>End:</strong> {{ election.end_date|date:"Y-m-d H:i" }}</p>
-                        <p class="mb-3"><strong>Candidates:</strong> {{ election.candidates.count }}</p>
+  <div class="election-card">
 
-                        {% if election.pk in voted_elections %}
-                            <!-- Already Voted -->
-                            <div class="alert alert-success mb-0">
-                                <strong>✓ You have voted</strong> in this election.
-                                <a href="{% url 'voter_vote_confirmation' election.pk %}" class="ms-2">View Confirmation</a>
-                            </div>
-                        {% else %}
-                            {% if voter.is_verified %}
-                                <!-- Verified Voter: Show Vote Now Button -->
-                                <a href="{% url 'voter_cast_vote' election.pk %}" class="btn btn-success w-100">
-                                    Vote Now
-                                </a>
-                            {% else %}
-                                <!-- Not Verified -->
-                                <button class="btn btn-secondary w-100" disabled>
-                                    Voting Unavailable (Not Verified)
-                                </button>
-                            {% endif %}
-                        {% endif %}
-                    </div>
-                </div>
-            </div>
-            {% endfor %}
+    <h4>{{ election.title }}</h4>
+    <p>Ends on: {{ election.end_date }}</p>
+
+    {% if election.id in voted_elections %}
+        <button class="btn btn-secondary" disabled>
+            ✔ Voted
+        </button>
+    {% else %}
+        <a href="{% url 'voter_view_campaigns' election.id %}"
+           class="btn btn-primary">
+           View Campaigns
+        </a>
+    {% endif %}
+
+  </div>
+{% endfor %}
+
         </div>
 
         <!-- Pagination -->

@@ -15,12 +15,17 @@ from .forms import PartyForm, CandidateForm, CustomUserChangeForm, VoterRegistra
 from .models import Party, Candidate, Voter, Vote, Election,Campaign
 from elections.models import Election
 from elections.forms import ElectionForm
-from django.contrib.auth.decorators import login_required
+
 from elections.models import Election
+from django.contrib.auth.decorators import login_required, user_passes_test
 
 from django.contrib.admin.views.decorators import staff_member_required
+from .models import Election, Campaign, VoterVote
 
 from django.core.paginator import Paginator
+from django.core.exceptions import PermissionDenied
+from django.db import IntegrityError
+from users.models import Voter, Candidate, Vote, Notification
 
 def home_view(request):
     return render(request, 'home.html')
@@ -137,35 +142,48 @@ def voter_dashboard(request):
 
 @login_required
 def candidate_dashboard(request):
-    if request.user.profile.role != 'candidate':
-        return redirect('user_dashboard')  # or voter dashboard
+    if request.user.role != 'candidate':
+        return redirect('home')
 
-    context = {
-        'user': request.user
-    }
-    return render(request, 'dashboards/candidate_dashboard.html', context)
+    candidate = get_object_or_404(Candidate, user=request.user)
+    campaigns = Campaign.objects.filter(candidate=candidate)
 
+    return render(request, 'candidate/dashboard.html', {
+        'candidate': candidate,
+        'campaigns': campaigns
+    })
+
+from django.contrib.auth.decorators import login_required
+from .models import Campaign, Candidate
 
 @login_required
-def candidate_campaign(request):
-    if request.user.profile.role != 'candidate':
-        return redirect('user_dashboard')
+def my_campaigns(request):
+    candidate = Candidate.objects.get(user=request.user)
+    campaigns = Campaign.objects.filter(candidate=candidate)
 
-    campaign, created = Campaign.objects.get_or_create(
-        candidate=request.user
-    )
+    return render(request, 'candidate/campaign/my_campaigns.html', {
+        'campaigns': campaigns
+    })
+from .forms import CampaignForm
+
+@login_required
+def create_campaign(request):
+    candidate = Candidate.objects.get(user=request.user)
 
     if request.method == 'POST':
-        form = CampaignForm(request.POST, instance=campaign)
+        form = CampaignForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('candidate_dashboard')
+            campaign = form.save(commit=False)
+            campaign.candidate = candidate
+            campaign.save()
+            return redirect('my_campaigns')
     else:
-        form = CampaignForm(instance=campaign)
+        form = CampaignForm()
 
-    return render(request, 'campaign/candidate_campaign.html', {
+    return render(request, 'candidate/campaign/create_campaign.html', {
         'form': form
     })
+
 
 def view_campaigns(request):
     campaigns = Campaign.objects.select_related('candidate')
@@ -173,12 +191,15 @@ def view_campaigns(request):
         'campaigns': campaigns
     })
 
+from elections.models import Election
+
 @login_required
 def candidate_elections(request):
-    elections = Election.objects.filter(is_active=True)
-    return render(request, 'voter/elections_list.html', {
+    elections = Election.objects.all()
+    return render(request, 'candidate/elections.html', {
         'elections': elections
     })
+
 
 def logout_view(request):
     logout(request)
@@ -246,39 +267,86 @@ def voter_elections_list(request):
     return render(request, 'voter/elections_list.html', context)
 
 
+from django.contrib.auth.decorators import login_required
+from django.shortcuts import get_object_or_404, render
+from .models import Election, Campaign, Voter, VoterVote
 
-def voter_view_results(request, election_id=None):
-    # Get all concluded elections
-    published_elections = Election.objects.filter(end_date__lte=timezone.now()).order_by('-end_date')
+@login_required
+def voter_view_campaigns(request, election_id):
+    # Get the election
+    election = get_object_or_404(Election, pk=election_id)
 
-    election = None
-    stats = None
-    total_votes = 0
+    # Get all campaigns for this election
+    campaigns = Campaign.objects.filter(election=election).select_related('candidate', 'candidate__party')
 
-    if election_id:
-        election = get_object_or_404(Election, pk=election_id)
-        # Aggregate votes per candidate
-        votes_qs = Vote.objects.filter(candidate__election=election).values(
-            'candidate__name', 'candidate__party__name'
-        ).annotate(votes_count=models.Count('id')).order_by('-votes_count')
+    # Get the Voter instance for the logged-in user
+    voter = get_object_or_404(Voter, user=request.user)
 
-        stats = [
-            {'candidate__name': v['candidate__name'],
-             'candidate__party__name': v['candidate__party__name'],
-             'votes': v['votes_count']}
-            for v in votes_qs
-        ]
+    # Get all votes by this voter
+    voter_votes = Vote.objects.filter(voter=voter, election=election)
+    voted_candidate_ids = voter_votes.values_list('candidate_id', flat=True)
+    if Vote.objects.filter(voter=voter, election=election).exists():
+        messages.info(request, "You have already voted in this election.")
+        return redirect('voter_elections_list')
 
-        total_votes = sum(v['votes'] for v in stats) if stats else 0
+    return render(request, 'voter/campaigns.html', {
+        'election': election,
+        'campaigns': campaigns,
+        'voted_candidate_ids': voted_candidate_ids,
+        'voter': voter  # pass Voter instance, not request.user
+    })
+
+
+
+
+from django.db.models import Count
+
+
+def voter_view_results(request):
+    # All completed elections
+    elections = Election.objects.filter(end_date__lte=timezone.now()).order_by('-end_date')
+
+    results_data = []
+
+    for election in elections:
+        votes = (
+            Vote.objects
+            .filter(election=election)
+            .values(
+                'candidate__name',
+                'candidate__party__name'
+            )
+            .annotate(vote_count=Count('id'))
+            .order_by('-vote_count')
+        )
+
+        total_votes = sum(v['vote_count'] for v in votes)
+
+        processed_votes = []
+        for v in votes:
+            percentage = round(
+                (v['vote_count'] / total_votes) * 100, 2
+            ) if total_votes > 0 else 0
+
+            processed_votes.append({
+                'candidate_name': v['candidate__name'],
+                'party_name': v['candidate__party__name'],
+                'votes': v['vote_count'],
+                'percentage': percentage
+            })
+
+        results_data.append({
+            'election': election,
+            'total_votes': total_votes,
+            'results': processed_votes
+        })
 
     context = {
-        'published_elections': published_elections,
-        'election': election,
-        'stats': stats,
-        'total_votes': total_votes,
-        'now': timezone.now(),
+        'results_data': results_data
     }
+
     return render(request, 'voter/view_results.html', context)
+
 
 def voter_notifications(request):
     """View all voter notifications."""
@@ -362,42 +430,52 @@ def voter_view_results_election(request, election_id):
     return render(request, 'voter/view_result.html', context)
 
 
-from django.contrib.auth.decorators import login_required
-from django.shortcuts import get_object_or_404
-from django.utils import timezone
+
+from django.db import IntegrityError
 from django.contrib import messages
-from .models import Voter, Candidate, Election, Vote
 
 @login_required
 def voter_cast_vote(request, election_id):
-    voter = get_object_or_404(Voter, user=request.user)
-    election = get_object_or_404(Election, pk=election_id)
-
-    # Ensure election is active
-    now = timezone.now()
-    if not (election.start_date <= now <= election.end_date):
-        messages.warning(request, "Voting for this election is not currently open.")
+    if request.method != "POST":
         return redirect('voter_elections_list')
 
-    candidates = Candidate.objects.filter(election=election, is_approved=True)
+    election = get_object_or_404(Election, pk=election_id)
+    voter = get_object_or_404(Voter, user=request.user)
 
-    if request.method == "POST":
-        candidate_id = request.POST.get('candidate_id')
-        if candidate_id:
-            candidate = get_object_or_404(Candidate, pk=candidate_id)
-            # Check if voter already voted
-            if Vote.objects.filter(voter=voter, election=election).exists():
-                messages.error(request, "You have already voted in this election.")
-            else:
-                Vote.objects.create(voter=voter, candidate=candidate, election=election)
-                messages.success(request, f"You have successfully voted for {candidate.name}.")
-            return redirect('voter_elections_list')
+    # Check verification
+    if not voter.is_verified:
+        messages.error(request, "You are not verified to vote.")
+        return redirect('voter_elections_list')
 
-    context = {
-        'election': election,
-        'candidates': candidates,
-    }
-    return render(request, 'voter/cast_vote.html', context)
+    candidate_id = request.POST.get('candidate_id')
+    candidate = get_object_or_404(Candidate, pk=candidate_id)
+
+    # Check if voter already voted
+    if Vote.objects.filter(voter=voter, election=election).exists():
+        messages.warning(request, "You have already voted in this election.")
+        vote = Vote.objects.get(voter=voter, election=election)
+        return redirect('vote_confirmation', vote_id=vote.id)
+
+    # Create the vote
+    vote = Vote.objects.create(
+        voter=voter,
+        candidate=candidate,
+        election=election
+    )
+
+    # Optional: create a notification
+    Notification.objects.create(
+        voter=voter,
+        title="Vote Submitted",
+        message=f"You have successfully voted in {election.title}.",
+        notification_type="vote_confirmation",
+        election=election
+    )
+
+    # ✅ Redirect using the instance ID, NOT the model
+    return redirect('vote_confirmation', vote_id=vote.id)
+
+
 
 # ==================== PASSWORD RESET VIEWS ====================
 
@@ -437,6 +515,15 @@ def verify_voters(request):
     return render(request, 'users/verify_voters.html', {'voters': voters})
 
 
+@login_required
+def vote_confirmation(request, vote_id):
+    vote = get_object_or_404(Vote, id=vote_id)
+    election = vote.election
+
+    return render(request, 'voter/vote_confirmation.html', {
+        'vote': vote,
+        'election': election,
+    })
 
 def voter_view_results_election(request, election_id):
     election = Election.objects.get(id=election_id)
@@ -464,3 +551,31 @@ def voter_view_results_election(request, election_id):
     }
 
     return render(request, 'voter/view_result.html', context)
+
+@login_required
+@user_passes_test(lambda u: u.is_superuser)
+def election_results(request, election_id):
+    election = get_object_or_404(Election, id=election_id)
+
+    candidates = Candidate.objects.filter(election=election)
+
+    results = []
+    for candidate in candidates:
+        vote_count = Vote.objects.filter(
+            election=election,
+            candidate=candidate
+        ).count()
+
+        results.append({
+            'candidate': candidate,
+            'votes': vote_count
+        })
+
+    # Find winner
+    winner = max(results, key=lambda x: x['votes']) if results else None
+
+    return render(request, 'users/view_results.html', {
+        'election': election,
+        'results': results,
+        'winner': winner
+    })

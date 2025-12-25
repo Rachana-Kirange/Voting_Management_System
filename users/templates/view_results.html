@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <h2 class="mb-4">🗳️ Election Results</h2>
+
+    {% if results_data %}
+        {% for item in results_data %}
+            <div class="card mb-4 shadow-sm">
+
+                <div class="card-header bg-dark text-white">
+                    <h4 class="mb-0">{{ item.election.title }}</h4>
+                    <small>
+                        Ended on: {{ item.election.end_date|date:"d M Y, H:i" }}
+                    </small>
+                </div>
+
+                <div class="card-body">
+                    <p><strong>Total Votes Cast:</strong> {{ item.total_votes }}</p>
+
+                    {% if item.results %}
+                        <table class="table table-bordered table-striped mt-3">
+                            <thead class="table-dark">
+                                <tr>
+                                    <th>Candidate</th>
+                                    <th>Party</th>
+                                    <th>Votes</th>
+                                    <th>Percentage</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for r in item.results %}
+                                    <tr>
+                                        <td>{{ r.candidate_name }}</td>
+                                        <td>{{ r.party_name }}</td>
+                                        <td>{{ r.votes }}</td>
+                                        <td>{{ r.percentage }}%</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <p class="text-muted">No votes recorded.</p>
+                    {% endif %}
+                </div>
+
+            </div>
+        {% endfor %}
+    {% else %}
+        <p>No election results available yet.</p>
+    {% endif %}
+
+</div>
+{% endblock %}

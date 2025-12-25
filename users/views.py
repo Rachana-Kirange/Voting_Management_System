@@ -472,7 +472,7 @@ def candidate_dashboard(request):
 
     campaigns = Campaign.objects.filter(candidate=candidate)
 
-    return render(request, 'dashboards/candidate_dashboard.html', {
+    return render(request, 'candidate/dashboard.html', {
         'candidate': candidate, 
         'campaigns': campaigns
     })

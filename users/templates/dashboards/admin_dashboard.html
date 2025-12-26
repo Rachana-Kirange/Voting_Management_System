@@ -1,134 +1,330 @@
-{% extends "base.html" %}
-{% load static %}
+{% extends 'base.html' %}
 
-{% block header %}
-<h2 class="display-title text-center py-3">Admin Dashboard</h2>
-{% endblock %}
+{% block title %}Admin Control Center{% endblock %}
 
 {% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<div class="row g-4">
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <div class="kpi-number">{{ total_voters }}</div>
-            <div class="kpi-label">Total Voters</div>
-            <p class="text-muted">Manage voters, activate/deactivate accounts.</p>
-            <a href="{% url 'user_list' %}" class="btn btn-primary btn-sm">Manage Users</a>
-        </div>
-    </div>
+<style>
+    /* --- Dashboard Specific Styles --- */
+    
+    /* Welcome Banner */
+    .admin-banner {
+        background: linear-gradient(135deg, #2b2d42 0%, #1a1b2e 100%);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+        color: white;
+    }
+    
+    .banner-circle {
+        position: absolute;
+        width: 200px;
+        height: 200px;
+        background: rgba(255, 255, 255, 0.05);
+        border-radius: 50%;
+        top: -50px;
+        right: -50px;
+    }
 
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <div class="kpi-number">{{ total_candidates }}</div>
-            <div class="kpi-label">Total Candidates</div>
-            <p class="text-muted">Approve and register candidates for elections.</p>
-            <a href="{% url 'candidate_list' %}" class="btn btn-primary btn-sm">Manage Candidates</a>
-        </div>
-    </div>
+    /* Stat Cards */
+    .stat-card {
+        border: none;
+        border-radius: 16px;
+        background: #fff;
+        padding: 24px;
+        box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        position: relative;
+        overflow: hidden;
+    }
+    .stat-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+    .stat-card::after {
+        content: '';
+        position: absolute;
+        bottom: 0; left: 0; width: 100%; height: 4px;
+        background: currentColor; /* Uses the text color set inline */
+        opacity: 0.5;
+    }
 
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <div class="kpi-number">{{ active_elections }}</div>
-            <div class="kpi-label">Active Elections</div>
-            <p class="text-muted">Create, update and publish elections.</p>
-            <a href="{% url 'election_list' %}" class="btn btn-primary btn-sm">Manage Elections</a>
-        </div>
-    </div>
-</div>
+    .stat-icon {
+        width: 56px; height: 56px;
+        border-radius: 14px;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 1rem;
+    }
 
-<div class="row g-4 mt-3">
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <div class="kpi-number">{{ votes_cast }}</div>
-            <div class="kpi-label">Votes Cast</div>
-            <p class="text-muted">Total votes recorded across all elections.</p>
-        </div>
-    </div>
+    /* Section Cards */
+    .control-card {
+        border: none;
+        border-radius: 20px;
+        background: #fff;
+        box-shadow: 0 5px 25px rgba(0,0,0,0.04);
+        overflow: hidden;
+        height: 100%;
+    }
+    
+    .control-header {
+        background: #fff;
+        padding: 25px;
+        border-bottom: 1px solid #f0f0f0;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+    }
 
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <div class="kpi-number">{{ pending_verifications }}</div>
-            <div class="kpi-label">Pending Verifications</div>
-            <p class="text-muted">Candidates awaiting admin approval.</p>
-        </div>
-    </div>
+    /* Table Styles */
+    .table-custom thead th {
+        background-color: #f8f9fa;
+        color: #6c757d;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        border: none;
+        padding: 15px 20px;
+    }
+    .table-custom tbody td {
+        padding: 15px 20px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f8f9fa;
+        font-size: 0.95rem;
+    }
+    .user-initial {
+        width: 35px; height: 35px;
+        background: #eef2ff; color: #4361ee;
+        border-radius: 50%;
+        display: inline-flex; align-items: center; justify-content: center;
+        font-weight: 700;
+        margin-right: 10px;
+    }
 
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <div class="kpi-number">{{ results_ready }}</div>
-            <div class="kpi-label">Elections Ready</div>
-            <p class="text-muted">Elections that have ended and may have results.</p>
-        </div>
-    </div>
-</div>
+    /* Election List Item */
+    .election-item {
+        padding: 20px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background 0.2s;
+    }
+    .election-item:last-child { border-bottom: none; }
+    .election-item:hover { background-color: #fcfcfc; }
 
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card shadow-sm border-warning">
-            <div class="card-header bg-warning text-dark">
-                <h5 class="mb-0 fw-bold">⚠️ Pending Results Publication</h5>
+</style>
+
+<div class="container py-5">
+    
+    <div class="admin-banner p-4 p-md-5 mb-5 shadow-lg">
+        <div class="banner-circle"></div>
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-md-8">
+                <h1 class="fw-bold mb-2">Admin Dashboard</h1>
+                <p class="mb-0 text-white-50">Welcome back, Administrator. You have full control over the election system.</p>
             </div>
-            <div class="card-body">
-                {% if concluded_unpublished_elections %}
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light">
-                                <tr>
-                                    <th>Election Title</th>
-                                    <th>Ended On</th>
-                                    <th class="text-end">Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for election in concluded_unpublished_elections %}
-                                <tr>
-                                    <td><strong>{{ election.title }}</strong></td>
-                                    <td>{{ election.end_date|date:"M d, Y H:i" }}</td>
-                                    <td class="text-end">
-                                        <form action="{% url 'publish_results' election.id %}" method="POST" style="display:inline;">
-                                            {% csrf_token %}
-                                            <button type="submit" class="btn btn-success btn-sm fw-bold">
-                                                Publish Results 🚀
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <a href="{% url 'create_election' %}" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm border-0" style="background: linear-gradient(90deg, #4361ee, #4cc9f0);">
+                    <i class="fas fa-plus-circle me-2"></i> Create Election
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4 mb-5">
+        
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="color: #4361ee;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold small mb-2">Total Voters</h6>
+                        <h2 class="fw-bold text-dark mb-0">{{ total_voters }}</h2>
                     </div>
-                {% else %}
-                    <p class="text-muted mb-0">No concluded elections are waiting for publication.</p>
-                {% endif %}
+                    <div class="stat-icon bg-primary bg-opacity-10 text-primary">
+                        <i class="fas fa-users"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="color: #ffb703;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold small mb-2">Candidates</h6>
+                        <h2 class="fw-bold text-dark mb-0">{{ total_candidates }}</h2>
+                    </div>
+                    <div class="stat-icon bg-warning bg-opacity-10 text-warning">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="color: #2ec4b6;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold small mb-2">Elections</h6>
+                        <h2 class="fw-bold text-dark mb-0">{{ total_elections }}</h2>
+                    </div>
+                    <div class="stat-icon bg-success bg-opacity-10 text-success">
+                        <i class="fas fa-box-open"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-xl-3 col-md-6">
+            <div class="stat-card" style="color: #ef233c;">
+                <div class="d-flex justify-content-between align-items-start">
+                    <div>
+                        <h6 class="text-uppercase text-muted fw-bold small mb-2">Pending</h6>
+                        <h2 class="fw-bold text-dark mb-0">{{ pending_voters.count }}</h2>
+                    </div>
+                    <div class="stat-icon bg-danger bg-opacity-10 text-danger">
+                        <i class="fas fa-user-clock"></i>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <div class="row g-4">
+        
+        <div class="col-lg-7">
+            <div class="control-card">
+                <div class="control-header">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-user-check me-2 text-warning"></i> Verification Queue
+                    </h5>
+                    {% if pending_voters %}
+                    <span class="badge bg-danger rounded-pill px-3">{{ pending_voters.count }} Waiting</span>
+                    {% endif %}
+                </div>
+                
+                <div class="card-body p-0">
+                    {% if pending_voters %}
+                        <div class="table-responsive">
+                            <table class="table table-custom mb-0">
+                                <thead>
+                                    <tr>
+                                        <th>Applicant</th>
+                                        <th>Voter ID</th>
+                                        <th class="text-end">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for v in pending_voters|slice:":6" %}
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center">
+                                                <div class="user-initial">{{ v.user.username|slice:":1"|upper }}</div>
+                                                <div>
+                                                    <div class="fw-bold text-dark">{{ v.user.username }}</div>
+                                                    <div class="small text-muted">{{ v.user.email }}</div>
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="text-secondary fw-bold">{{ v.voter_id }}</td>
+                                        <td class="text-end">
+                                            <div class="btn-group">
+                                                <a href="{% url 'verify_voter' v.id %}" class="btn btn-sm btn-success px-3 rounded-start" title="Approve">
+                                                    <i class="fas fa-check"></i>
+                                                </a>
+                                                <a href="{% url 'delete_voter' v.id %}" class="btn btn-sm btn-outline-danger px-3 rounded-end" title="Reject/Delete" onclick="return confirm('Delete this user?');">
+                                                    <i class="fas fa-times"></i>
+                                                </a>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% if pending_voters.count > 6 %}
+                        <div class="p-3 text-center bg-light border-top">
+                            <a href="#" class="text-decoration-none fw-bold small text-primary">View All Pending Requests</a>
+                        </div>
+                        {% endif %}
+                    {% else %}
+                        <div class="text-center py-5">
+                            <div class="mb-3 opacity-25">
+                                <i class="fas fa-clipboard-check fa-4x text-success"></i>
+                            </div>
+                            <h5 class="fw-bold text-secondary">All Caught Up!</h5>
+                            <p class="text-muted small">There are no pending verifications at the moment.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-5">
+            <div class="control-card">
+                <div class="control-header">
+                    <h5 class="fw-bold mb-0 text-dark">
+                        <i class="fas fa-cogs me-2 text-primary"></i> Manage Elections
+                    </h5>
+                </div>
+                
+                <div class="card-body p-0">
+                    {% if elections %}
+                        <div class="d-flex flex-column">
+                        {% for e in elections %}
+                            <div class="election-item">
+                                <div class="d-flex justify-content-between align-items-center mb-3">
+                                    <div class="d-flex align-items-center">
+                                        <div class="bg-light rounded p-2 me-3 text-secondary">
+                                            <i class="fas fa-vote-yea fa-lg"></i>
+                                        </div>
+                                        <div>
+                                            <h6 class="fw-bold text-dark mb-0">{{ e.title }}</h6>
+                                            <small class="text-muted" style="font-size: 0.75rem;">
+                                                End: {{ e.end_date|date:"M d, Y" }}
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    {% if e.is_active %}
+                                        <span class="badge bg-success bg-opacity-10 text-success border border-success px-2">Active</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-2">Closed</span>
+                                    {% endif %}
+                                </div>
+
+                                <div class="d-flex justify-content-between align-items-center mt-2">
+                                    <a href="{% url 'toggle_election' e.id %}" class="btn btn-sm {% if e.is_active %}btn-outline-warning{% else %}btn-outline-success{% endif %} rounded-pill px-3" style="font-size: 0.8rem;">
+                                        {% if e.is_active %}
+                                            <i class="fas fa-pause me-1"></i> Close
+                                        {% else %}
+                                            <i class="fas fa-play me-1"></i> Open
+                                        {% endif %}
+                                    </a>
+
+                                    {% if not e.results_published %}
+                                        <a href="{% url 'publish_results' e.id %}" class="btn btn-sm btn-primary bg-gradient rounded-pill px-3 border-0" style="font-size: 0.8rem;">
+                                            Publish Results
+                                        </a>
+                                    {% else %}
+                                        <span class="text-success small fw-bold"><i class="fas fa-check-double me-1"></i> Results Live</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                        </div>
+                    {% else %}
+                        <div class="text-center py-5 px-4">
+                            <div class="mb-3 opacity-25">
+                                <i class="fas fa-folder-open fa-3x text-muted"></i>
+                            </div>
+                            <p class="text-muted small mb-3">No elections found in the system.</p>
+                            <a href="{% url 'create_election' %}" class="btn btn-sm btn-outline-primary rounded-pill">Create First Election</a>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
 </div>
-
-<div class="row g-4 mt-3">
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <h5 class="fw-bold">View Results</h5>
-            <p class="text-muted">Check final election results instantly.</p>
-            <a href="{% url 'results_overview' %}" class="btn btn-primary btn-sm">Open</a>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <h5 class="fw-bold">Audit Logs</h5>
-            <p class="text-muted">Track all activities and system operations.</p>
-            <a href="{% url 'audit_list' %}" class="btn btn-primary btn-sm">Open</a>
-        </div>
-    </div>
-
-    <div class="col-md-4">
-        <div class="card-modern p-4 text-center">
-            <h5 class="fw-bold">Backup & Restore</h5>
-            <p class="text-muted">Database backup and restoration.</p>
-            <a href="{% url 'backups_list' %}" class="btn btn-primary btn-sm">Open</a>
-        </div>
-    </div>
-</div>
-
 {% endblock %}

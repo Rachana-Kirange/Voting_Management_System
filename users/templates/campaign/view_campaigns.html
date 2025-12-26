@@ -1,14 +1,114 @@
 {% extends "base.html" %}
 
-{% block content %}
-<h3 class="text-center">Candidate Campaigns</h3>
+{% block title %}Candidate Campaigns{% endblock %}
 
-{% for c in campaigns %}
-<div class="card p-3 mt-3">
-    <h5>{{ c.candidate.username }} ({{ c.party_name }})</h5>
-    <p>{{ c.manifesto }}</p>
+{% block content %}
+<style>
+    /* Card Hover Effect */
+    .campaign-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 16px;
+        overflow: hidden;
+    }
+    .campaign-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Avatar styling */
+    .candidate-avatar {
+        width: 60px;
+        height: 60px;
+        background: linear-gradient(45deg, #4361ee, #4cc9f0);
+        color: white;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        font-weight: bold;
+        margin-right: 15px;
+    }
+
+    /* Manifesto Quote Style */
+    .manifesto-box {
+        background-color: #f8f9fa;
+        border-left: 4px solid #4361ee;
+        padding: 15px;
+        border-radius: 0 8px 8px 0;
+        font-style: italic;
+        color: #555;
+    }
+</style>
+
+<div class="container py-5">
+    
+    <div class="row mb-5 text-center">
+        <div class="col-lg-8 mx-auto">
+            <span class="badge bg-primary bg-opacity-10 text-primary px-3 py-2 rounded-pill mb-2 fw-bold">
+                Elections 2025
+            </span>
+            <h2 class="fw-bold display-6">Candidate Campaigns</h2>
+            <p class="text-muted lead">
+                Explore the manifestos and visions of candidates running for office.
+            </p>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        {% for c in campaigns %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card campaign-card h-100 shadow-sm">
+                <div class="card-body p-4">
+                    
+                    <div class="d-flex align-items-center mb-3">
+                        <div class="candidate-avatar shadow-sm">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <div>
+                            <h5 class="fw-bold mb-0 text-dark">
+                                {{ c.candidate.username|title }}
+                            </h5>
+                            <span class="badge bg-secondary mt-1">
+                                {{ c.party_name|default:"Independent" }}
+                            </span>
+                        </div>
+                    </div>
+
+                    <hr class="opacity-10 my-3">
+
+                    <div class="mb-3">
+                        <small class="text-uppercase text-muted fw-bold" style="font-size: 0.75rem; letter-spacing: 1px;">
+                            Manifesto / Vision
+                        </small>
+                        <div class="manifesto-box mt-2">
+                            <i class="fas fa-quote-left text-primary opacity-25 me-2"></i>
+                            {{ c.manifesto|default:"No manifesto provided yet."|truncatewords:30 }}
+                        </div>
+                    </div>
+
+                    <div class="mt-auto pt-2">
+                        <button class="btn btn-outline-primary btn-sm w-100 rounded-pill">
+                            View Full Profile
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        
+        <div class="col-12 text-center py-5">
+            <div class="mb-3">
+                <div class="bg-light rounded-circle d-inline-flex align-items-center justify-content-center" style="width: 80px; height: 80px;">
+                    <i class="fas fa-search fa-2x text-muted opacity-50"></i>
+                </div>
+            </div>
+            <h4 class="text-secondary fw-bold">No Campaigns Found</h4>
+            <p class="text-muted">There are currently no active campaigns to display.</p>
+        </div>
+        {% endfor %}
+    </div>
 </div>
-{% empty %}
-<p>No campaigns available.</p>
-{% endfor %}
 {% endblock %}

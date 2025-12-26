@@ -1,19 +1,122 @@
 {% extends "base.html" %}
 
+{% block title %}My Campaigns{% endblock %}
+
 {% block content %}
-<h2>My Campaigns</h2>
+<style>
+    /* Campaign Card Styling */
+    .campaign-card {
+        border: none;
+        border-radius: 16px;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        background: #fff;
+    }
+    .campaign-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+    }
 
-{% if campaigns %}
-    <ul>
-        {% for campaign in campaigns %}
-            <li>
-                <strong>{{ campaign.election.title }}</strong><br>
-                {{ campaign.message }}
-            </li>
-        {% endfor %}
-    </ul>
-{% else %}
-    <p>You have not created any campaigns yet.</p>
-{% endif %}
+    /* Icon Box */
+    .icon-box {
+        width: 48px;
+        height: 48px;
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        margin-bottom: 15px;
+    }
 
+    /* Message styling */
+    .message-preview {
+        background-color: #f8f9fa;
+        border-left: 3px solid #4361ee;
+        padding: 12px 15px;
+        font-style: italic;
+        color: #555;
+        font-size: 0.9rem;
+        border-radius: 0 8px 8px 0;
+        line-height: 1.5;
+    }
+</style>
+
+<div class="container py-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-5 flex-wrap gap-3">
+        <div>
+            <h2 class="fw-bold mb-1">My Campaigns</h2>
+            <p class="text-muted mb-0">Manage your active election campaigns and manifestos.</p>
+        </div>
+        <a href="{% url 'create_campaign' %}" class="btn btn-primary rounded-pill px-4 shadow-sm fw-bold">
+            <i class="fas fa-plus-circle me-2"></i> Create New
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% if campaigns %}
+            {% for campaign in campaigns %}
+            <div class="col-md-6 col-lg-4">
+                <div class="card campaign-card h-100 shadow-sm">
+                    <div class="card-body p-4">
+                        
+                        <div class="d-flex justify-content-between align-items-start mb-3">
+                            <div class="icon-box bg-primary bg-opacity-10 text-primary">
+                                <i class="fas fa-bullhorn"></i>
+                            </div>
+                            
+                            {% if campaign.election.is_active %}
+                                <span class="badge bg-success bg-opacity-10 text-success border border-success rounded-pill px-3">Active</span>
+                            {% else %}
+                                <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary rounded-pill px-3">Closed</span>
+                            {% endif %}
+                        </div>
+
+                        <h5 class="fw-bold text-dark mb-3">
+                            {{ campaign.election.title }}
+                        </h5>
+
+                        <div class="mb-3">
+                            <small class="text-uppercase text-muted fw-bold" style="font-size: 0.7rem; letter-spacing: 0.5px;">
+                                Campaign Message
+                            </small>
+                            <div class="message-preview mt-2">
+                                "{{ campaign.message|truncatewords:20|default:"No message provided." }}"
+                            </div>
+                        </div>
+
+                    </div>
+                    
+                    <div class="card-footer bg-white border-0 p-3 pt-0 d-flex justify-content-between align-items-center">
+                        <small class="text-muted">
+                            <i class="far fa-calendar-alt me-1"></i> {{ campaign.election.end_date|date:"M d, Y" }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+            
+        {% else %}
+            <div class="col-12">
+                <div class="text-center py-5 bg-light rounded-4 border border-dashed">
+                    <div class="mb-3 text-muted opacity-50">
+                        <i class="fas fa-folder-open fa-3x"></i>
+                    </div>
+                    <h4 class="fw-bold text-secondary">No Campaigns Found</h4>
+                    <p class="text-muted mb-4">You haven't launched any campaigns yet.</p>
+                    <a href="{% url 'create_campaign' %}" class="btn btn-outline-primary rounded-pill px-4">
+                        Start Your First Campaign
+                    </a>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <div class="mt-5">
+        <a href="{% url 'candidate_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+</div>
 {% endblock %}

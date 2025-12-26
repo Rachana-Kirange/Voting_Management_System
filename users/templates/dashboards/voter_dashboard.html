@@ -1,62 +1,163 @@
 {% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Voter Dashboard{% endblock %}
+
 {% block content %}
-<div class="container mt-5">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    /* --- Dashboard Specific Styles --- */
+    .welcome-banner {
+        background: linear-gradient(135deg, #4361ee 0%, #4cc9f0 100%);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .decorative-circle {
+        position: absolute;
+        width: 150px;
+        height: 150px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        top: -30px;
+        right: -30px;
+    }
+
+    /* Action Cards */
+    .action-card {
+        border: none;
+        border-radius: 16px;
+        transition: all 0.3s ease;
+        background: #fff;
+        height: 100%;
+        overflow: hidden;
+    }
+    
+    .action-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 30px rgba(67, 97, 238, 0.15);
+    }
+
+    /* Icon Circles */
+    .icon-circle {
+        width: 65px;
+        height: 65px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 1.5rem;
+    }
+    
+    .icon-primary { background: rgba(67, 97, 238, 0.1); color: #4361ee; }
+    .icon-success { background: rgba(25, 135, 84, 0.1); color: #198754; }
+    .icon-info { background: rgba(13, 202, 240, 0.1); color: #0dcaf0; }
+    .icon-warning { background: rgba(255, 193, 7, 0.1); color: #ffc107; }
+
+    /* Text Styling */
+    .card-title { font-weight: 700; color: #333; }
+    .card-text { font-size: 0.9rem; color: #6c757d; }
+</style>
+
+<div class="container py-5">
+    
+    {% if user.is_authenticated %}
     <div class="row justify-content-center">
-        <div class="col-md-8">
-            <h2 class="mb-4">Voter Dashboard</h2>
+        <div class="col-lg-10">
             
-            {% if user.is_authenticated %}
-                <div class="row g-3">
-                    <div class="col-md-6">
-                        <div class="card text-center border-primary">
-                            <div class="card-body">
-                                <h5 class="card-title">My Profile</h5>
-                                <p class="card-text">View your profile and verification status</p>
-                                <a href="{% url 'voter_profile' %}" class="btn btn-primary">Go to Profile</a>
-                            </div>
-                        </div>
+            <div class="card welcome-banner border-0 shadow-lg mb-5 text-white p-4">
+                <div class="decorative-circle"></div>
+                <div class="d-flex align-items-center justify-content-between position-relative z-1 flex-wrap gap-3">
+                    <div>
+                        <h2 class="fw-bold mb-1">Welcome, {{ user.full_name|default:user.username }}! 👋</h2>
+                        <p class="mb-0 opacity-75">Your voice matters. Manage your profile and cast your vote.</p>
                     </div>
-
-                    <div class="col-md-6">
-                        <div class="card text-center border-success">
-                            <div class="card-body">
-                                <h5 class="card-title">Active Elections</h5>
-                                <p class="card-text">View and participate in elections</p>
-                                <a href="{% url 'voter_elections_list' %}" class="btn btn-success">View Elections</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="card text-center border-info">
-                            <div class="card-body">
-                                <h5 class="card-title">Results</h5>
-                                <p class="card-text">View published election results</p>
-                                <a href="{% url 'voter_view_results' %}" class="btn btn-info">View Results</a>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="col-md-6">
-                        <div class="card text-center border-warning">
-                            <div class="card-body">
-                                <h5 class="card-title">Notifications</h5>
-                                <p class="card-text">Check your notifications and alerts</p>
-                                <a href="{% url 'voter_notifications' %}" class="btn btn-warning">View Notifications</a>
-                            </div>
-                        </div>
+                    <div>
+                        <a href="{% url 'logout' %}" class="btn btn-light rounded-pill px-4 text-primary fw-bold shadow-sm">
+                            <i class="fas fa-sign-out-alt me-2"></i> Logout
+                        </a>
                     </div>
                 </div>
+            </div>
 
-                <div class="mt-4">
-                    <a href="{% url 'logout' %}" class="btn btn-outline-danger">Logout</a>
+            <div class="row g-4">
+                
+                <div class="col-md-6">
+                    <a href="{% url 'voter_profile' %}" class="text-decoration-none">
+                        <div class="card action-card shadow-sm p-4 text-center">
+                            <div class="icon-circle icon-primary mx-auto">
+                                <i class="fas fa-user-circle"></i>
+                            </div>
+                            <h5 class="card-title">My Profile</h5>
+                            <p class="card-text">View registration details and check your verification status.</p>
+                            <span class="btn btn-outline-primary rounded-pill btn-sm px-4 mt-2">Manage Profile</span>
+                        </div>
+                    </a>
                 </div>
-            {% else %}
-                <div class="alert alert-warning">
-                    Please <a href="{% url 'login' %}">log in</a> to access the voter portal.
+
+                <div class="col-md-6">
+                    <a href="{% url 'voter_elections_list' %}" class="text-decoration-none">
+                        <div class="card action-card shadow-sm p-4 text-center">
+                            <div class="icon-circle icon-success mx-auto">
+                                <i class="fas fa-vote-yea"></i>
+                            </div>
+                            <h5 class="card-title">Active Elections</h5>
+                            <p class="card-text">Browse active elections and securely cast your vote.</p>
+                            <span class="btn btn-outline-success rounded-pill btn-sm px-4 mt-2">Vote Now</span>
+                        </div>
+                    </a>
                 </div>
-            {% endif %}
+
+                <div class="col-md-6">
+                    <a href="{% url 'voter_view_results' %}" class="text-decoration-none">
+                        <div class="card action-card shadow-sm p-4 text-center">
+                            <div class="icon-circle icon-info mx-auto">
+                                <i class="fas fa-chart-pie"></i>
+                            </div>
+                            <h5 class="card-title">Election Results</h5>
+                            <p class="card-text">Transparency first. View detailed analytics of concluded elections.</p>
+                            <span class="btn btn-outline-info text-dark rounded-pill btn-sm px-4 mt-2">View Analytics</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="col-md-6">
+                    <a href="{% url 'voter_notifications' %}" class="text-decoration-none">
+                        <div class="card action-card shadow-sm p-4 text-center">
+                            <div class="icon-circle icon-warning mx-auto">
+                                <i class="fas fa-bell"></i>
+                            </div>
+                            <h5 class="card-title">Notifications</h5>
+                            <p class="card-text">Stay updated with alerts about upcoming votes and approvals.</p>
+                            <span class="btn btn-outline-warning text-dark rounded-pill btn-sm px-4 mt-2">Check Alerts</span>
+                        </div>
+                    </a>
+                </div>
+
+            </div>
         </div>
     </div>
+
+    {% else %}
+    <div class="row justify-content-center">
+        <div class="col-md-6 text-center">
+            <div class="card border-0 shadow-lg rounded-4 p-5">
+                <div class="mb-4 text-warning">
+                    <i class="fas fa-lock fa-4x"></i>
+                </div>
+                <h3 class="fw-bold text-dark">Access Restricted</h3>
+                <p class="text-muted">You must be logged in to access the voter dashboard.</p>
+                <div class="d-flex justify-content-center gap-3 mt-3">
+                    <a href="{% url 'login' %}" class="btn btn-primary rounded-pill px-4">Login</a>
+                    <a href="{% url 'register' %}" class="btn btn-outline-secondary rounded-pill px-4">Register</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
 </div>
 {% endblock %}

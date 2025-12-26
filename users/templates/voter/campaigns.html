@@ -1,46 +1,219 @@
 {% extends 'base.html' %}
+{% load static %}
 
-{% block header %}
-<h3 class="py-3">Campaigns for {{ election.title }}</h3>
-{% endblock %}
+{% block title %}Campaigns - {{ election.title }}{% endblock %}
 
 {% block content %}
-<div class="container mt-4">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    /* --- Header Section --- */
+    .election-header {
+        background: linear-gradient(135deg, #4361ee 0%, #3f37c9 100%);
+        border-radius: 20px;
+        padding: 40px 30px;
+        color: white;
+        margin-bottom: 40px;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 10px 30px rgba(67, 97, 238, 0.2);
+    }
+    
+    .election-header::before {
+        content: '';
+        position: absolute;
+        top: -50%; right: -10%;
+        width: 300px; height: 300px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+    }
+
+    /* --- Campaign Card --- */
+    .campaign-card {
+        border: none;
+        border-radius: 16px;
+        background: #fff;
+        transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .campaign-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    }
+
+    /* Voted State (Disabled Card) */
+    .card-disabled {
+        opacity: 0.7;
+        filter: grayscale(0.8);
+        pointer-events: none;
+        background: #f8f9fa;
+    }
+    
+    /* Candidate Avatar */
+    .avatar-wrapper {
+        position: relative;
+        text-align: center;
+        margin-top: -40px;
+    }
+    
+    .candidate-avatar {
+        width: 90px;
+        height: 90px;
+        background: #fff;
+        border-radius: 50%;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 2.5rem;
+        color: #4361ee;
+        border: 4px solid #fff;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+    }
+
+    /* Card Top Banner */
+    .card-banner {
+        height: 80px;
+        background: linear-gradient(90deg, #e2eafc, #dbe4ff);
+    }
+
+    /* Party Badge */
+    .party-badge {
+        display: inline-block;
+        padding: 6px 14px;
+        background: #f1f3f5;
+        color: #495057;
+        border-radius: 50px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        margin-bottom: 15px;
+        border: 1px solid #dee2e6;
+    }
+
+    /* Manifesto Box */
+    .manifesto-box {
+        background-color: #fcfcfc;
+        border-left: 3px solid #4cc9f0;
+        padding: 12px 15px;
+        border-radius: 0 8px 8px 0;
+        font-size: 0.9rem;
+        color: #666;
+        min-height: 80px;
+        margin-bottom: 20px;
+        font-style: italic;
+    }
+
+    /* Vote Button */
+    .btn-vote {
+        background: linear-gradient(90deg, #4361ee, #4cc9f0);
+        border: none;
+        color: white;
+        font-weight: 600;
+        padding: 12px;
+        border-radius: 12px;
+        width: 100%;
+        transition: 0.2s;
+        box-shadow: 0 4px 15px rgba(67, 97, 238, 0.3);
+    }
+    
+    .btn-vote:hover {
+        transform: scale(1.02);
+        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.5);
+        color: white;
+    }
+</style>
+
+<div class="container py-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <a href="{% url 'voter_elections_list' %}" class="btn btn-light rounded-pill px-4 text-muted fw-bold shadow-sm">
+            <i class="fas fa-arrow-left me-2"></i> Back to Elections
+        </a>
+    </div>
+
+    <div class="election-header">
+        <div class="row align-items-center position-relative z-1">
+            <div class="col-lg-8">
+                <span class="badge bg-white bg-opacity-25 border border-white border-opacity-50 text-white mb-2">Vote Now</span>
+                <h2 class="fw-bold mb-1">{{ election.title }}</h2>
+                <p class="mb-0 opacity-75">Review the candidates below and cast your vote carefully.</p>
+            </div>
+            <div class="col-lg-4 text-lg-end mt-3 mt-lg-0">
+                <div class="d-inline-flex align-items-center bg-white bg-opacity-10 px-3 py-2 rounded-pill">
+                    <i class="far fa-calendar-alt me-2"></i>
+                    <small>Ends: {{ election.end_date|date:"M d, Y" }}</small>
+                </div>
+            </div>
+        </div>
+    </div>
 
     {% if campaigns %}
-        <div class="row">
+        <div class="row g-4">
             {% for campaign in campaigns %}
-  <div class="campaign-card">
-    <h3>{{ campaign.candidate.name }}</h3>
-    <p>Party: {{ campaign.candidate.party.name }}</p>
+            <div class="col-md-6 col-lg-4">
+                
+                <div class="campaign-card h-100 {% if voted_candidate_ids %}card-disabled{% endif %}">
+                    
+                    <div class="card-banner"></div>
+                    
+                    <div class="card-body text-center px-4 pb-4">
+                        
+                        <div class="avatar-wrapper">
+                            <div class="candidate-avatar">
+                                <i class="fas fa-user-tie"></i>
+                            </div>
+                        </div>
 
-    {% if campaign.candidate.id in voted_candidate_ids %}
-      <button type="button" disabled class="btn btn-secondary">
-        Already Voted
-      </button>
-    {% else %}
-      <form method="POST" action="{% url 'voter_cast_vote' election.id %}">
-        {% csrf_token %}
-        <input type="hidden" name="candidate_id" value="{{ campaign.candidate.id }}">
-        <button type="submit" class="btn btn-primary">
-          Vote Now
-        </button>
-      </form>
-    {% endif %}
-  </div>
-{% endfor %}
+                        <h4 class="fw-bold text-dark mt-3 mb-1">{{ campaign.candidate.name }}</h4>
+                        <div class="party-badge">
+                            <i class="fas fa-flag me-1 text-primary"></i> {{ campaign.candidate.party.name }}
+                        </div>
 
+                        <div class="text-start">
+                            <small class="text-muted text-uppercase fw-bold" style="font-size: 0.7rem; letter-spacing: 1px;">Campaign Message</small>
+                            <div class="manifesto-box mt-1">
+                                "{{ campaign.message|default:'No campaign message provided.'|truncatewords:25 }}"
+                            </div>
+                        </div>
 
+                        <div class="mt-auto">
+                            {% if campaign.candidate.id in voted_candidate_ids %}
+                                <button class="btn btn-success w-100 py-2 rounded-pill fw-bold" disabled style="opacity: 1; filter: none;">
+                                    <i class="fas fa-check-circle me-2"></i> You Voted Here
+                                </button>
+                            {% elif voted_candidate_ids %}
+                                <button class="btn btn-secondary w-100 py-2 rounded-pill" disabled>
+                                    Election Closed
+                                </button>
+                            {% else %}
+                                <form method="POST" action="{% url 'voter_cast_vote' election.id %}" onsubmit="return confirm('Are you sure you want to vote for {{ campaign.candidate.name }}? This action cannot be undone.');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="candidate_id" value="{{ campaign.candidate.id }}">
+                                    <button type="submit" class="btn-vote">
+                                        Vote for {{ campaign.candidate.name }} <i class="fas fa-vote-yea ms-2"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
         </div>
+
     {% else %}
-        <div class="alert alert-info">
-            <strong>No campaigns available</strong> for this election yet.
+        <div class="text-center py-5 bg-light rounded-4 border border-dashed mt-3">
+            <div class="mb-3 text-muted opacity-50">
+                <i class="fas fa-bullhorn fa-4x"></i>
+            </div>
+            <h4 class="fw-bold text-secondary">No Campaigns Found</h4>
+            <p class="text-muted mb-0">There are no candidates campaigning for this election yet.</p>
         </div>
     {% endif %}
-
-    <div class="mt-4">
-        <a href="{% url 'voter_elections_list' %}" class="btn btn-outline-secondary">Back to Elections</a>
-    </div>
 
 </div>
 {% endblock %}

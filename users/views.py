@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
+from .forms import ElectionForm
 from django.contrib.auth.views import (
     PasswordResetView, PasswordResetDoneView,
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -163,22 +164,20 @@ def logout_view(request):
 
 @login_required
 def candidate_dashboard(request):
-    # 1. Check if user is a candidate
+
     if hasattr(request.user, 'role') and request.user.role != 'candidate':
         return redirect('users_home')
 
-    # 2. Get the Candidate profile
+    
     try:
         candidate = get_object_or_404(Candidate, user=request.user)
     except:
-        # If profile is missing, redirect safely instead of crashing
+        
         messages.error(request, "Candidate profile not found.")
         return redirect('users_home')
 
     campaigns = Campaign.objects.filter(candidate=candidate)
 
-    # ✅ FIXED: The path now matches your file location
-    # users/templates/dashboards/candidate_dashboard.html
     return render(request, 'dashboards/candidate_dashboard.html', {
         'candidate': candidate,
         'campaigns': campaigns
@@ -493,3 +492,135 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
+
+@login_required
+def admin_dashboard(request):
+    # Security Check: Only allow superusers or staff
+    if not (request.user.is_superuser or request.user.is_staff or request.user.role == 'admin'):
+        messages.error(request, "Access Denied: Admins only.")
+        return redirect('users_home')
+
+    # 1. Fetch Stats
+    total_voters = Voter.objects.count()
+    total_candidates = Candidate.objects.count()
+    total_elections = Election.objects.count()
+    pending_voters = Voter.objects.filter(is_verified=False)
+
+    # 2. Fetch Active Elections
+    elections = Election.objects.all().order_by('-start_date')
+
+    context = {
+        'total_voters': total_voters,
+        'total_candidates': total_candidates,
+        'total_elections': total_elections,
+        'pending_voters': pending_voters,
+        'elections': elections,
+    }
+    return render(request, 'dashboards/admin_dashboard.html', context)
+
+@login_required
+def verify_voter(request, voter_id):
+    if not request.user.is_staff: return redirect('users_home')
+    
+    voter = get_object_or_404(Voter, id=voter_id)
+    voter.is_verified = True
+    voter.save()
+    
+    # Notify the voter
+    Notification.objects.create(
+        voter=voter,
+        title="Account Verified",
+        message="Your account has been verified. You can now vote in active elections.",
+        notification_type="alert"
+    )
+    messages.success(request, f"Voter {voter.user.username} has been verified.")
+    return redirect('admin_dashboard')
+
+@login_required
+def delete_voter(request, voter_id):
+    if not request.user.is_staff: return redirect('users_home')
+    
+    voter = get_object_or_404(Voter, id=voter_id)
+    user = voter.user
+    voter.delete()
+    user.delete() # Delete the login account too
+    
+    messages.warning(request, "Voter removed from system.")
+    return redirect('admin_dashboard')
+
+# @login_required
+# def create_election(request):
+#     if not request.user.is_staff: return redirect('users_home')
+
+#     if request.method == 'POST':
+#         form = ElectionForm(request.POST)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request, "New election created successfully!")
+#             return redirect('admin_dashboard')
+#     else:
+#         form = ElectionForm()
+    
+#     return render(request, 'admin/create_election.html', {'form': form})
+
+@login_required
+def create_election(request):
+    # 1. Security Check
+    if not (request.user.is_superuser or request.user.is_staff or request.user.role == 'admin'):
+        messages.error(request, "Access Denied.")
+        return redirect('users_home')
+
+    if request.method == 'POST':
+        form = ElectionForm(request.POST)
+        if form.is_valid():
+            # 2. Save the Election first
+            election = form.save(commit=False)
+            election.save()
+            
+            # 3. Handle Selected Candidates
+            selected_candidates = form.cleaned_data.get('candidates')
+            if selected_candidates:
+                for candidate in selected_candidates:
+                    # A. Link Candidate to Election (Many-to-Many)
+                    candidate.elections.add(election)
+                    
+                    # B. Auto-create a Campaign (So it shows in Voter Dashboard)
+                    # We check if a campaign already exists to avoid duplicates
+                    Campaign.objects.get_or_create(
+                        candidate=candidate,
+                        election=election,
+                        defaults={
+                            'message': f"Vote for {candidate.name}! Campaigning for {election.title}."
+                        }
+                    )
+
+            messages.success(request, f"Election '{election.title}' created with {selected_candidates.count()} candidates!")
+            return redirect('admin_dashboard')
+        else:
+            messages.error(request, "Please correct the errors below.")
+    else:
+        form = ElectionForm()
+    
+    return render(request, 'admin/create_election.html', {'form': form})
+@login_required
+def toggle_election(request, election_id):
+    if not request.user.is_staff: return redirect('users_home')
+    
+    election = get_object_or_404(Election, id=election_id)
+    election.is_active = not election.is_active # Switch True/False
+    election.save()
+    
+    status = "Active" if election.is_active else "Closed"
+    messages.info(request, f"Election is now {status}.")
+    return redirect('admin_dashboard')
+
+@login_required
+def publish_results(request, election_id):
+    if not request.user.is_staff: return redirect('users_home')
+    
+    election = get_object_or_404(Election, id=election_id)
+    election.results_published = True
+    election.save()
+    
+    messages.success(request, f"Results for {election.title} have been published.")
+    return redirect('admin_dashboard')

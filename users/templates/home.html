@@ -5,100 +5,127 @@
 
 {% block header %}
 <style>
+    /* --- Global & Hero Styles --- */
+    :root {
+        --primary-gradient: linear-gradient(135deg, #4361ee 0%, #4cc9f0 100%);
+        --glass-bg: rgba(255, 255, 255, 0.05);
+        --glass-border: rgba(255, 255, 255, 0.1);
+        --glass-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+    }
+
+    .hero-section {
+        position: relative;
+        overflow: hidden;
+        padding-top: 40px;
+        padding-bottom: 80px;
+    }
+
+    /* Ambient Background Glows */
+    .ambient-glow {
+        position: absolute;
+        width: 300px;
+        height: 300px;
+        background: radial-gradient(circle, rgba(67, 97, 238, 0.4) 0%, rgba(0,0,0,0) 70%);
+        border-radius: 50%;
+        filter: blur(50px);
+        z-index: -1;
+        animation: floatOrb 10s infinite alternate;
+    }
+    .glow-1 { top: -50px; left: -100px; }
+    .glow-2 { bottom: 20%; right: -50px; background: radial-gradient(circle, rgba(247, 37, 133, 0.2) 0%, rgba(0,0,0,0) 70%); }
+
+    @keyframes floatOrb {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(30px, 50px); }
+    }
+
+    /* Typography */
     .hero-title {
-        font-size: 3.5rem;
+        font-size: 4rem;
         font-weight: 800;
         line-height: 1.1;
-        background: linear-gradient(135deg, #ffffff 0%, #a5b4fc 100%);
+        background: linear-gradient(to right, #ffffff, #a5b4fc);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
-        margin-bottom: 20px;
-        letter-spacing: -1px;
+        margin-bottom: 1.5rem;
+        letter-spacing: -1.5px;
     }
 
     .lead-text {
-        font-size: 1.1rem;
-        color: rgba(255, 255, 255, 0.7);
+        font-size: 1.25rem;
+        color: rgba(255, 255, 255, 0.75);
         font-weight: 300;
-        line-height: 1.6;
+        line-height: 1.7;
+        max-width: 600px;
     }
 
+    /* --- Glass Cards --- */
     .glass-panel {
-        background: rgba(255, 255, 255, 0.03);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        border-radius: 20px;
-        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.2);
-        transition: transform 0.4s ease, box-shadow 0.4s ease;
-        height: 100%; 
+        background: var(--glass-bg);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid var(--glass-border);
+        border-radius: 24px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        height: 100%;
+        position: relative;
+        overflow: hidden;
     }
 
     .glass-panel:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
-        border-color: rgba(255, 255, 255, 0.2);
-        background: rgba(255, 255, 255, 0.06);
-    }
-
-    .hero-visual {
-        position: relative;
-        height: 350px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        animation: float 6s ease-in-out infinite;
+        transform: translateY(-8px);
+        border-color: rgba(255, 255, 255, 0.3);
+        background: rgba(255, 255, 255, 0.08);
+        box-shadow: 0 15px 35px rgba(0, 0, 0, 0.4);
     }
     
-    .main-icon {
-        font-size: 9rem;
-        background: linear-gradient(to bottom right, #4cc9f0, #4361ee);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        filter: drop-shadow(0 0 40px rgba(67, 97, 238, 0.4));
-        z-index: 2;
-    }
-
-    .glow-circle {
+    /* Card Inner Glow on Hover */
+    .glass-panel::before {
+        content: '';
         position: absolute;
-        width: 250px;
-        height: 250px;
-        background: radial-gradient(circle, rgba(76, 201, 240, 0.2) 0%, rgba(0,0,0,0) 70%);
-        border-radius: 50%;
-        animation: pulse 4s infinite;
-        z-index: 1;
+        top: 0; left: -100%;
+        width: 100%; height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.05), transparent);
+        transition: 0.5s;
+    }
+    .glass-panel:hover::before {
+        left: 100%;
     }
 
-    @keyframes float {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-20px); }
-    }
-    
-    @keyframes pulse {
-        0%, 100% { transform: scale(1); opacity: 0.5; }
-        50% { transform: scale(1.1); opacity: 0.8; }
-    }
-
+    /* --- Buttons --- */
     .btn-hero-primary {
-        background: linear-gradient(90deg, #4361ee, #4cc9f0);
+        background: var(--primary-gradient);
         border: none;
-        padding: 12px 30px;
+        padding: 14px 35px;
         border-radius: 50px;
         color: white;
         font-weight: 600;
+        letter-spacing: 0.5px;
         box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4);
-        transition: 0.3s;
+        transition: all 0.3s ease;
+        position: relative;
+        overflow: hidden;
+        z-index: 1;
     }
-    .btn-hero-primary:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 20px rgba(67, 97, 238, 0.6);
-        color: white;
+    
+    .btn-hero-primary::after {
+        content: '';
+        position: absolute;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: linear-gradient(90deg, #3a0ca3, #4361ee);
+        z-index: -1;
+        transition: opacity 0.3s;
+        opacity: 0;
     }
+    
+    .btn-hero-primary:hover::after { opacity: 1; }
+    .btn-hero-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(67, 97, 238, 0.6); color: #fff; }
 
     .btn-hero-outline {
         background: transparent;
-        border: 2px solid rgba(255,255,255,0.3);
-        padding: 12px 30px;
+        border: 2px solid rgba(255,255,255,0.2);
+        padding: 12px 35px;
         border-radius: 50px;
         color: white;
         font-weight: 600;
@@ -110,92 +137,159 @@
         color: white;
     }
 
-    .quote-strip {
-        background: rgba(0, 0, 0, 0.3);
-        border-left: 4px solid #4cc9f0;
-        padding: 15px 20px;
-        border-radius: 0 10px 10px 0;
-        font-style: italic;
-        color: #ddd;
-        margin-top: 20px;
-        display: inline-block;
-    }
-
-    /* 6. Feature Icons */
-    .icon-box {
-        width: 50px;
-        height: 50px;
-        background: rgba(255,255,255,0.1);
-        border-radius: 12px;
+    /* --- Visual Elements --- */
+    .hero-visual-wrapper {
+        position: relative;
+        height: 400px;
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: 1.5rem;
-        margin-bottom: 15px;
+        perspective: 1000px;
     }
-    .icon-cyan { color: #4cc9f0; }
-    .icon-pink { color: #f72585; }
-    .icon-purple { color: #4361ee; }
 
+    .floating-shield {
+        font-size: 10rem;
+        background: linear-gradient(135deg, #4cc9f0, #4361ee);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        filter: drop-shadow(0 10px 30px rgba(67, 97, 238, 0.5));
+        animation: floatShield 6s ease-in-out infinite;
+    }
+
+    .orbit-item {
+        position: absolute;
+        background: rgba(255,255,255,0.1);
+        backdrop-filter: blur(5px);
+        padding: 10px 15px;
+        border-radius: 12px;
+        border: 1px solid rgba(255,255,255,0.1);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        color: white;
+        font-size: 0.9rem;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        animation: orbitFloat 8s infinite ease-in-out;
+    }
+
+    .orbit-1 { top: 20%; left: 10%; animation-delay: 0s; }
+    .orbit-2 { bottom: 20%; right: 5%; animation-delay: 2s; }
+    .orbit-3 { top: 15%; right: 15%; animation-delay: 4s; }
+
+    @keyframes floatShield {
+        0%, 100% { transform: translateY(0) rotate(0deg); }
+        50% { transform: translateY(-20px) rotate(2deg); }
+    }
+    @keyframes orbitFloat {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-15px); }
+    }
+
+    /* --- Feature Icons --- */
+    .feature-icon-box {
+        width: 60px;
+        height: 60px;
+        border-radius: 16px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 1.75rem;
+        margin-bottom: 20px;
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .tech-badge {
+        background: rgba(255,255,255,0.05);
+        border: 1px solid rgba(255,255,255,0.1);
+        color: #ddd;
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 0.85rem;
+        transition: 0.2s;
+    }
+    .tech-badge:hover { background: rgba(255,255,255,0.15); color: #fff; }
+
+    /* Quote Strip */
+    .quote-container {
+        border-left: 3px solid #4361ee;
+        padding-left: 20px;
+        margin-top: 40px;
+    }
+    .quote-text {
+        font-style: italic;
+        color: rgba(255,255,255,0.8);
+        font-size: 1.1rem;
+    }
 </style>
 
-<div class="row align-items-center py-5 animate__animated animate__fadeIn">
-    
-    <div class="col-lg-7">
-        <div class="pe-lg-4">
-            <span class="badge rounded-pill bg-dark border border-secondary text-light mb-3 px-3 py-2">
-                <i class="fas fa-bolt text-warning me-2"></i>Powered by Django & Blockchain Logic
-            </span>
-            
-            <h1 class="hero-title">Secure, Simple,<br>Fair Voting.</h1>
-            <p class="lead-text mb-4">
-                A modern platform built for transparency. Ensure every vote counts with our 
-                audit-ready, role-based election system.
-            </p>
+<div class="hero-section">
+    <div class="ambient-glow glow-1"></div>
+    <div class="ambient-glow glow-2"></div>
 
-            <div class="d-flex flex-wrap gap-3 mb-4">
-                {% if user.is_authenticated %}
-                    {% if user.role == 'admin' %}
-                        <a class="btn-hero-primary text-decoration-none" href="{% url 'admin_dashboard' %}">
-                            <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
-                        </a>
-                    {% elif user.role == 'candidate' %}
-                        <a class="btn-hero-primary text-decoration-none" href="{% url 'candidate_dashboard' %}">
-                            <i class="fas fa-user-tie me-2"></i>Campaign Dashboard
-                        </a>
+    <div class="row align-items-center animate__animated animate__fadeIn">
+        
+        <div class="col-lg-7 position-relative z-1">
+            <div class="pe-lg-5">
+                <div class="d-inline-flex align-items-center mb-4 px-3 py-1 rounded-pill border border-secondary bg-dark bg-opacity-50">
+                    <span class="badge bg-primary rounded-circle p-1 me-2"><i class="fas fa-check small"></i></span>
+                    <span class="text-white-50 small fw-bold text-uppercase">Secure Blockchain Logic</span>
+                </div>
+                
+                <h1 class="hero-title">Voting Reimagined.<br>Transparent & Secure.</h1>
+                
+                <p class="lead-text mb-5">
+                    Experience the future of democracy with our audit-ready, role-based election system. 
+                    Built for integrity, designed for simplicity.
+                </p>
+
+                <div class="d-flex flex-wrap gap-3 mb-5">
+                    {% if user.is_authenticated %}
+                        {% if user.role == 'admin' %}
+                            <a class="btn-hero-primary text-decoration-none" href="{% url 'admin_dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-2"></i>Admin Dashboard
+                            </a>
+                        {% elif user.role == 'candidate' %}
+                            <a class="btn-hero-primary text-decoration-none" href="{% url 'candidate_dashboard' %}">
+                                <i class="fas fa-bullhorn me-2"></i>Candidate Hub
+                            </a>
+                        {% else %}
+                            <a class="btn-hero-primary text-decoration-none" href="{% url 'voter_dashboard' %}">
+                                <i class="fas fa-vote-yea me-2"></i>Cast Your Vote
+                            </a>
+                        {% endif %}
+                        <a class="btn-hero-outline text-decoration-none" href="{% url 'logout' %}">Sign Out</a>
                     {% else %}
-                        <a class="btn-hero-primary text-decoration-none" href="{% url 'voter_dashboard' %}">
-                            <i class="fas fa-vote-yea me-2"></i>Vote Now
+                        <a class="btn-hero-primary text-decoration-none" href="{% url 'login' %}">
+                            Get Started <i class="fas fa-arrow-right ms-2"></i>
                         </a>
+                        <a class="btn-hero-outline text-decoration-none" href="{% url 'register' %}">Create Account</a>
                     {% endif %}
-                    <a class="btn-hero-outline text-decoration-none" href="{% url 'logout' %}">Logout</a>
-                {% else %}
-                    <a class="btn-hero-primary text-decoration-none" href="{% url 'login' %}">
-                        Login <i class="fas fa-arrow-right ms-2"></i>
-                    </a>
-                    <a class="btn-hero-outline text-decoration-none" href="{% url 'register' %}">Register</a>
-                {% endif %}
-            </div>
+                </div>
 
-            <div class="quote-strip">
-                <i class="fas fa-quote-left me-2 text-white-50"></i>
-                <span id="quote" style="transition: opacity 0.5s;">“Your vote is your voice — use it wisely.”</span>
+                <div class="quote-container">
+                    <p class="quote-text mb-0" id="dynamic-quote">“Your vote is your voice — use it wisely.”</p>
+                </div>
             </div>
         </div>
-    </div>
 
+        <div class="col-lg-5 d-none d-lg-block position-relative">
+            <div class="hero-visual-wrapper">
+                <i class="fas fa-shield-alt floating-shield"></i>
+                
+                <div class="orbit-item orbit-1">
+                    <i class="fas fa-lock text-info"></i>
+                    <span>Encrypted Data</span>
+                </div>
+                
+                <div class="orbit-item orbit-2">
+                    <i class="fas fa-check-circle text-success"></i>
+                    <span>Verified Voters</span>
+                </div>
 
-    <div class="col-lg-5 d-none d-lg-block">
-        <div class="hero-visual">
-            <div class="glow-circle"></div>
-            <i class="fas fa-shield-alt main-icon"></i>
-            
-            <div class="position-absolute glass-panel px-3 py-2 d-flex align-items-center" 
-                 style="bottom: 40px; right: 0; height: auto; animation: float 5s infinite reverse;">
-                <i class="fas fa-check-circle text-success fs-4 me-2"></i>
-                <div>
-                    <div class="text-white fw-bold small">System Integrity</div>
-                    <div class="text-white-50 small" style="font-size: 0.75rem;">100% Verified</div>
+                <div class="orbit-item orbit-3">
+                    <i class="fas fa-file-contract text-warning"></i>
+                    <span>Audit Logs</span>
                 </div>
             </div>
         </div>
@@ -209,104 +303,104 @@
 <div class="row g-4 mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.2s;">
     
     <div class="col-md-4">
-        <div class="glass-panel p-4">
-            <div class="icon-box">
-                <i class="fas fa-check-double icon-cyan"></i>
+        <div class="glass-panel p-4 p-lg-5">
+            <div class="feature-icon-box text-info">
+                <i class="fas fa-fingerprint"></i>
             </div>
-            <h5 class="fw-bold text-white">Why Online Voting?</h5>
-            <p class="text-white-50 small">
-                Ensures accuracy, reduces manual errors, and promotes transparency 
-                throughout the election process using digital validation.
+            <h4 class="fw-bold text-white mb-3">Why Online Voting?</h4>
+            <p class="text-white-50">
+                Eliminate manual errors and ensure complete accuracy. Our digital validation process guarantees that one person equals exactly one vote.
             </p>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="glass-panel p-4">
-            <div class="icon-box">
-                <i class="fas fa-layer-group icon-pink"></i>
+        <div class="glass-panel p-4 p-lg-5">
+            <div class="feature-icon-box text-danger">
+                <i class="fas fa-cubes"></i>
             </div>
-            <h5 class="fw-bold text-white">Key Features</h5>
-            <ul class="text-white-50 small ps-3 mb-0">
-                <li>Role-Based Authentication</li>
-                <li>Secure Vote Casting</li>
-                <li>Audit Logs Tracking</li>
-                <li>Backup & Restore Module</li>
+            <h4 class="fw-bold text-white mb-3">Core Features</h4>
+            <ul class="list-unstyled text-white-50 mb-0 d-flex flex-column gap-2">
+                <li><i class="fas fa-check text-primary me-2"></i> Role-Based Access</li>
+                <li><i class="fas fa-check text-primary me-2"></i> Real-time Tallying</li>
+                <li><i class="fas fa-check text-primary me-2"></i> Immutable Logs</li>
+                <li><i class="fas fa-check text-primary me-2"></i> Secure Backup</li>
             </ul>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="glass-panel p-4">
-            <div class="icon-box">
-                <i class="fas fa-code icon-purple"></i>
+        <div class="glass-panel p-4 p-lg-5">
+            <div class="feature-icon-box text-warning">
+                <i class="fas fa-code-branch"></i>
             </div>
-            <h5 class="fw-bold text-white">Technologies</h5>
-            <p class="text-white-50 small mb-0">
-                <span class="badge bg-dark border border-secondary">Python</span>
-                <span class="badge bg-dark border border-secondary">Django</span>
-                <span class="badge bg-dark border border-secondary">MySQL</span>
-                <span class="badge bg-dark border border-secondary">Bootstrap 5</span>
+            <h4 class="fw-bold text-white mb-3">Powered By</h4>
+            <p class="text-white-50 mb-4">
+                Built on a robust, scalable stack designed for security and speed.
             </p>
+            <div class="d-flex flex-wrap gap-2">
+                <span class="tech-badge">Python 3.9</span>
+                <span class="tech-badge">Django 4</span>
+                <span class="tech-badge">MySQL</span>
+                <span class="tech-badge">Bootstrap 5</span>
+            </div>
         </div>
     </div>
 
 </div>
 
 <div class="row g-4 mb-5 animate__animated animate__fadeInUp" style="animation-delay: 0.4s;">
-    <div class="col-12">
-        <h4 class="text-white mb-4"><i class="fas fa-cogs me-2"></i>System Modules</h4>
+    <div class="col-12 mb-2">
+        <h3 class="text-white fw-bold"><i class="fas fa-layer-group me-2 text-primary"></i>System Modules</h3>
     </div>
 
     <div class="col-md-4">
-        <div class="glass-panel p-4 text-center position-relative overflow-hidden">
-            <div class="position-absolute top-0 end-0 p-3 opacity-25">
-                <i class="fas fa-vote-yea fa-5x text-white"></i>
+        <div class="glass-panel p-4 text-center">
+            <div class="mb-3 opacity-50">
+                <i class="fas fa-vote-yea fa-4x text-white"></i>
             </div>
-            <div class="position-relative z-1">
-                <h5 class="fw-bold text-white">Cast Secure Votes</h5>
-                <p class="text-white-50 small">Voters can cast votes securely; every action is recorded for auditability.</p>
-                <a class="btn btn-sm btn-outline-info rounded-pill mt-2" href="{% url 'voter_dashboard' %}">Go to Voting</a>
-            </div>
+            <h5 class="fw-bold text-white">Voter Portal</h5>
+            <p class="text-white-50 small mb-3">Secure registration, profile verification, and seamless vote casting interface.</p>
+            <a href="{% url 'voter_dashboard' %}" class="btn btn-sm btn-outline-light rounded-pill px-3">Access Portal</a>
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="glass-panel p-4 text-center position-relative overflow-hidden">
-            <div class="position-absolute top-0 end-0 p-3 opacity-25">
-                <i class="fas fa-users-cog fa-5x text-white"></i>
+        <div class="glass-panel p-4 text-center">
+            <div class="mb-3 opacity-50">
+                <i class="fas fa-user-tie fa-4x text-white"></i>
             </div>
-            <div class="position-relative z-1">
-                <h5 class="fw-bold text-white">Manage Candidates</h5>
-                <p class="text-white-50 small">Admins can approve and maintain candidate listings for upcoming elections.</p>
-            </div>
+            <h5 class="fw-bold text-white">Candidate Management</h5>
+            <p class="text-white-50 small mb-3">Campaign creation, manifesto publishing, and real-time status tracking.</p>
+            {% if user.role == 'candidate' %}
+            <a href="{% url 'candidate_dashboard' %}" class="btn btn-sm btn-outline-light rounded-pill px-3">Manage Campaigns</a>
+            {% endif %}
         </div>
     </div>
 
     <div class="col-md-4">
-        <div class="glass-panel p-4 text-center position-relative overflow-hidden">
-            <div class="position-absolute top-0 end-0 p-3 opacity-25">
-                <i class="fas fa-chart-pie fa-5x text-white"></i>
+        <div class="glass-panel p-4 text-center">
+            <div class="mb-3 opacity-50">
+                <i class="fas fa-chart-pie fa-4x text-white"></i>
             </div>
-            <div class="position-relative z-1">
-                <h5 class="fw-bold text-white">Audit & Results</h5>
-                <p class="text-white-50 small">Monitor activity logs and view trustworthy, transparent results at a glance.</p>
-            </div>
+            <h5 class="fw-bold text-white">Results & Audit</h5>
+            <p class="text-white-50 small mb-3">Transparency first. View election outcomes and verifiable system logs.</p>
+            <a href="{% url 'voter_view_results' %}" class="btn btn-sm btn-outline-light rounded-pill px-3">View Results</a>
         </div>
     </div>
 </div>
 
-<div class="glass-panel p-4 mt-5 d-flex justify-content-between align-items-center flex-wrap gap-3">
-    <div>
-        <h5 class="fw-bold text-white mb-1">Project Summary</h5>
-        <p class="text-white-50 mb-0 small" style="max-width: 600px;">
-            A complete election management system covering registration, verification, 
-            voting, and auditing.
-        </p>
+<div class="glass-panel p-3 px-4 d-flex align-items-center justify-content-between mt-5">
+    <div class="d-flex align-items-center">
+        <i class="fas fa-server text-success me-3 fs-5"></i>
+        <div>
+            <div class="text-white fw-bold small">System Status</div>
+            <div class="text-success small" style="font-size: 0.75rem;">● Operational</div>
+        </div>
     </div>
-    <div class="text-end">
-        <small class="text-white-50 d-block">Status</small>
-        <span class="text-success fw-bold"><i class="fas fa-circle me-1" style="font-size: 8px;"></i>System Operational</span>
+    <div class="text-end d-none d-md-block">
+        <div class="text-white-50 small">Current Time</div>
+        <div class="text-white small fw-bold">{% now "l, F jS Y" %}</div>
     </div>
 </div>
 
@@ -314,25 +408,24 @@
 
 {% block extra_js %}
 <script>
-    (function(){
-        const container = document.getElementById('quote');
-        if (!container) return;
+    document.addEventListener('DOMContentLoaded', function() {
+        const quoteEl = document.getElementById('dynamic-quote');
         const quotes = [
-            'Your vote is your voice — use it with courage and care.',
-            'Integrity in voting builds stronger communities.',
-            'Small actions — like voting — produce big changes.',
-            'Vote not because you must, but because your voice matters.'
+            "Your vote is your voice — use it wisely.",
+            "Democracy is based upon the conviction that there are extraordinary possibilities in ordinary people.",
+            "The ballot is stronger than the bullet.",
+            "Bad officials are elected by good citizens who do not vote."
         ];
+        
         let i = 0;
-        function showNext(){
-            i = (i + 1) % quotes.length;
-            container.style.opacity = 0;
-            setTimeout(()=>{
-                container.textContent = '“' + quotes[i] + '”';
-                container.style.opacity = 1;
+        setInterval(() => {
+            quoteEl.style.opacity = 0;
+            setTimeout(() => {
+                i = (i + 1) % quotes.length;
+                quoteEl.textContent = `“${quotes[i]}”`;
+                quoteEl.style.opacity = 1;
             }, 500);
-        }
-        setInterval(showNext, 5000);
-    })();
+        }, 6000);
+    });
 </script>
 {% endblock %}

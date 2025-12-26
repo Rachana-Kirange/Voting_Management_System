@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Create New Election{% endblock %}
+
+{% block content %}
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+<style>
+    /* --- Form Card Styling --- */
+    .form-card {
+        border: none;
+        border-radius: 20px;
+        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+        overflow: hidden;
+        background: #fff;
+    }
+
+    .form-header {
+        background: linear-gradient(135deg, #4361ee 0%, #4cc9f0 100%);
+        padding: 40px 30px;
+        color: white;
+        position: relative;
+    }
+    
+    .form-header::after {
+        content: '';
+        position: absolute;
+        top: 0; right: 0; bottom: 0; left: 0;
+        background: url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI0MCIgaGVpZ2h0PSI0MCIgdmlld0JveD0iMCAwIDQwIDQwIj48ZyBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxwYXRoIGQ9Ik0wIDQwaDQwVjBIMHY0MHptMjAgMjBWMjBIMjB2MjB6TTIwIDIwaDIwdjIwSDIweiIgZmlsbD0iI2ZmZiIgZmlsbC1vcGFjaXR5PSIwLjA1Ii8+PC9nPjwvc3ZnPg==');
+        opacity: 0.3;
+    }
+
+    /* Input Fields */
+    .form-label-custom {
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .form-control {
+        border-radius: 12px;
+        padding: 12px 15px;
+        border: 1px solid #e9ecef;
+        background-color: #f8f9fa;
+        font-size: 0.95rem;
+        transition: all 0.3s ease;
+    }
+    
+    .form-control:focus {
+        background-color: #fff;
+        border-color: #4361ee;
+        box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.15);
+    }
+
+    /* Candidate List Box */
+    .candidate-list-box {
+        max-height: 250px;
+        overflow-y: auto;
+        border: 1px solid #dee2e6;
+        border-radius: 12px;
+        background: #fff;
+    }
+
+    .candidate-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 15px;
+        border-bottom: 1px solid #f0f0f0;
+        transition: background-color 0.2s;
+        cursor: pointer;
+    }
+    
+    .candidate-item:last-child {
+        border-bottom: none;
+    }
+
+    .candidate-item:hover {
+        background-color: #f0f4ff;
+    }
+
+    .candidate-item label {
+        cursor: pointer;
+        margin-bottom: 0;
+        font-weight: 500;
+        color: #333;
+        flex-grow: 1;
+        font-size: 0.95rem;
+        text-transform: none; /* Reset uppercase from global label style */
+    }
+
+    /* Checkbox Styling */
+    input[type="checkbox"] {
+        accent-color: #4361ee;
+        width: 18px;
+        height: 18px;
+        margin-right: 12px;
+        cursor: pointer;
+    }
+
+    /* Active Switch Box */
+    .active-switch-box {
+        background-color: #eef2ff;
+        border: 1px solid #dae0ff;
+        border-radius: 12px;
+        padding: 15px;
+        display: flex;
+        align-items: center;
+    }
+</style>
+
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-lg-8 col-md-10">
+            
+            <div class="form-card animate__animated animate__fadeInUp">
+                
+                <div class="form-header">
+                    <div class="d-flex align-items-center justify-content-between position-relative z-1">
+                        <div>
+                            <h2 class="fw-bold mb-1">Create Election</h2>
+                            <p class="mb-0 opacity-75">Define election parameters and enroll candidates.</p>
+                        </div>
+                        <div class="bg-white bg-opacity-25 rounded-circle p-3 d-none d-sm-block">
+                            <i class="fas fa-vote-yea fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="p-4 p-md-5">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+
+                        <div class="mb-4">
+                            <label class="form-label-custom">
+                                <i class="fas fa-heading me-2 text-primary"></i> Election Title
+                            </label>
+                            {{ form.title }}
+                            {% if form.title.errors %}
+                                <div class="text-danger small mt-1">{{ form.title.errors }}</div>
+                            {% endif %}
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-custom">
+                                <i class="fas fa-align-left me-2 text-info"></i> Description
+                            </label>
+                            {{ form.description }}
+                        </div>
+
+                        <div class="row g-3 mb-4">
+                            <div class="col-md-6">
+                                <label class="form-label-custom">
+                                    <i class="far fa-calendar-alt me-2 text-success"></i> Start Date & Time
+                                </label>
+                                {{ form.start_date }}
+                            </div>
+                            <div class="col-md-6">
+                                <label class="form-label-custom">
+                                    <i class="far fa-calendar-times me-2 text-danger"></i> End Date & Time
+                                </label>
+                                {{ form.end_date }}
+                            </div>
+                        </div>
+
+                        <div class="mb-4">
+                            <label class="form-label-custom text-dark mb-3 d-block">
+                                <i class="fas fa-users me-2 text-warning"></i> Select Candidates
+                            </label>
+                            
+                            <div class="candidate-list-box shadow-sm">
+                                {% for checkbox in form.candidates %}
+                                    <div class="candidate-item">
+                                        {{ checkbox.tag }}
+                                        <label for="{{ checkbox.id_for_label }}">
+                                            {{ checkbox.choice_label }}
+                                        </label>
+                                    </div>
+                                {% empty %}
+                                    <div class="text-center p-4">
+                                        <div class="text-muted opacity-50 mb-2">
+                                            <i class="fas fa-user-slash fa-2x"></i>
+                                        </div>
+                                        <p class="text-danger small mb-2 fw-bold">No candidates found.</p>
+                                        <a href="{% url 'register' %}" class="btn btn-sm btn-outline-primary rounded-pill">
+                                            Register New Candidate
+                                        </a>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                            <div class="form-text mt-2 ms-1">
+                                <i class="fas fa-info-circle me-1"></i> Selected candidates will automatically have a campaign page created.
+                            </div>
+                        </div>
+
+                        <div class="mb-5 active-switch-box">
+                            <div class="form-check form-switch d-flex align-items-center ps-0">
+                                {{ form.is_active }}
+                                <div class="ms-3">
+                                    <label class="form-check-label fw-bold text-dark d-block mb-0" style="text-transform: none;">
+                                        Publish Immediately?
+                                    </label>
+                                    <small class="text-muted">If unchecked, the election will remain hidden from voters.</small>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center border-top pt-4">
+                            <a href="{% url 'admin_dashboard' %}" class="btn btn-light rounded-pill px-4 text-muted fw-bold">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm" 
+                                    style="background: linear-gradient(90deg, #4361ee, #4cc9f0); border: none;">
+                                <i class="fas fa-check-circle me-2"></i> Create Election
+                            </button>
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}

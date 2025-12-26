@@ -1,19 +1,109 @@
 {% extends "base.html" %}
 
+{% block title %}Available Elections{% endblock %}
+
 {% block content %}
-<h2>Available Elections</h2>
+<style>
+    /* Card Hover & Transition */
+    .election-card {
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        border: none;
+        border-radius: 12px;
+        overflow: hidden;
+    }
+    .election-card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    }
 
-<ul>
-{% for election in elections %}
-    <li>
-        <strong>{{ election.title }}</strong><br>
-        Start: {{ election.start_date }} <br>
-        End: {{ election.end_date }}
-    </li>
-{% empty %}
-    <li>No elections available.</li>
-{% endfor %}
-</ul>
+    /* Date Box Styling */
+    .date-box {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 8px 12px;
+        font-size: 0.9rem;
+        color: #555;
+        display: flex;
+        align-items: center;
+    }
+    .date-box i {
+        color: #4361ee;
+        margin-right: 8px;
+    }
 
-<a href="{% url 'candidate_dashboard' %}">Back to Dashboard</a>
+    /* Status Badge Position */
+    .status-badge {
+        position: absolute;
+        top: 15px;
+        right: 15px;
+    }
+</style>
+
+<div class="container py-5">
+    
+    <div class="d-flex justify-content-between align-items-center mb-5">
+        <div>
+            <h2 class="fw-bold mb-1">Available Elections</h2>
+            <p class="text-muted mb-0">Browse elections currently open for campaigning.</p>
+        </div>
+        <a href="{% url 'candidate_dashboard' %}" class="btn btn-outline-secondary rounded-pill px-4">
+            <i class="fas fa-arrow-left me-2"></i> Back to Dashboard
+        </a>
+    </div>
+
+    <div class="row g-4">
+        {% for election in elections %}
+        <div class="col-md-6 col-lg-4">
+            <div class="card election-card h-100 shadow-sm">
+                
+                <div class="card-body p-4">
+                    <div class="status-badge">
+                        {% if election.is_active %}
+                            <span class="badge bg-success bg-opacity-10 text-success border border-success px-3 rounded-pill">Active</span>
+                        {% else %}
+                            <span class="badge bg-secondary bg-opacity-10 text-secondary border border-secondary px-3 rounded-pill">Inactive</span>
+                        {% endif %}
+                    </div>
+
+                    <h5 class="card-title fw-bold text-dark mb-3 pe-5">
+                        {{ election.title }}
+                    </h5>
+                    
+                    <hr class="opacity-10 my-3">
+
+                    <div class="d-flex flex-column gap-2">
+                        <div class="date-box">
+                            <i class="far fa-calendar-check"></i> 
+                            <span><strong>Start:</strong> {{ election.start_date|date:"M d, Y" }}</span>
+                        </div>
+                        <div class="date-box">
+                            <i class="far fa-calendar-times"></i> 
+                            <span><strong>End:</strong> {{ election.end_date|date:"M d, Y" }}</span>
+                        </div>
+                    </div>
+
+                </div>
+                
+                <div class="card-footer bg-white border-0 p-3 pt-0">
+                    <a href="{% url 'create_campaign' %}" class="btn btn-primary w-100 rounded-pill">
+                        <i class="fas fa-plus-circle me-1"></i> Create Campaign
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% empty %}
+        
+        <div class="col-12">
+            <div class="text-center py-5 bg-light rounded-4 border border-dashed">
+                <div class="mb-3 text-muted opacity-50">
+                    <i class="fas fa-calendar-times fa-3x"></i>
+                </div>
+                <h4 class="fw-bold text-secondary">No Elections Available</h4>
+                <p class="text-muted mb-0">There are currently no elections scheduled.</p>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+</div>
 {% endblock %}

@@ -36,8 +36,8 @@ class CustomUserAdmin(DjangoUserAdmin):
 
 @admin.register(Voter)
 class VoterAdmin(admin.ModelAdmin):
-    list_display = ('user', 'voter_id', 'mobile_no', 'is_verified')
-    list_filter = ('is_verified',)
+    list_display = ('id', 'user', 'voter_id', 'verification_status')
+    list_filter = ('verification_status',)
     search_fields = ('user__username', 'voter_id')
     actions = ['verify_voters']
 

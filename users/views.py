@@ -162,36 +162,36 @@ def logout_view(request):
 
 
 
-@login_required
-def candidate_dashboard(request):
+# @login_required
+# def candidate_dashboard(request):
 
-    if hasattr(request.user, 'role') and request.user.role != 'candidate':
-        return redirect('users_home')
+#     if hasattr(request.user, 'role') and request.user.role != 'candidate':
+#         return redirect('users_home')
 
     
-    try:
-        candidate = get_object_or_404(Candidate, user=request.user)
-    except:
+#     try:
+#         candidate = get_object_or_404(Candidate, user=request.user)
+#     except:
         
-        messages.error(request, "Candidate profile not found.")
-        return redirect('users_home')
+#         messages.error(request, "Candidate profile not found.")
+#         return redirect('users_home')
 
-    campaigns = Campaign.objects.filter(candidate=candidate)
+#     campaigns = Campaign.objects.filter(candidate=candidate)
 
-    return render(request, 'dashboards/candidate_dashboard.html', {
-        'candidate': candidate,
-        'campaigns': campaigns
-    })
+#     return render(request, 'dashboards/candidate_dashboard.html', {
+#         'candidate': candidate,
+#         'campaigns': campaigns
+#     })
 
 @login_required
 def my_campaigns(request):
-    candidate = Candidate.objects.get(user=request.user)
+    candidate = get_object_or_404(Candidate, user=request.user)
     campaigns = Campaign.objects.filter(candidate=candidate)
     return render(request, 'candidate/campaign/my_campaigns.html', {'campaigns': campaigns})
 
 @login_required
 def create_campaign(request):
-    candidate = Candidate.objects.get(user=request.user)
+    candidate = get_object_or_404(Candidate, user=request.user)
     if request.method == 'POST':
         form = CampaignForm(request.POST)
         if form.is_valid():
@@ -228,7 +228,7 @@ def voter_register(request):
         if form.is_valid():
             voter = form.save(commit=False)
             voter.user = request.user
-            voter.is_verified = False
+            # voter.is_verified = False
             voter.save()
             messages.success(request, "Registration submitted. Await verification.")
             return redirect('voter_dashboard')
@@ -263,7 +263,7 @@ def voter_elections_list(request):
         messages.warning(request, 'Please register as a voter first.')
         return redirect('voter_register')
     
-    if not voter.is_verified:
+    if voter.verification_status != 'verified':
         messages.warning(request, "Verification Required: You cannot vote until verified.")
 
     # Show active elections
@@ -309,7 +309,7 @@ def voter_cast_vote(request, election_id):
     election = get_object_or_404(Election, pk=election_id)
     voter = get_object_or_404(Voter, user=request.user)
 
-    if not voter.is_verified:
+    if voter.verification_status != 'verified':
         messages.error(request, "You are not verified to vote.")
         return redirect('voter_elections_list')
 
@@ -358,33 +358,33 @@ def voter_notifications(request):
 
 
 
-def voter_view_results(request):
+# def voter_view_results(request):
     
-    elections = Election.objects.filter(
-        end_date__lte=timezone.now(),
-        results_published=True 
-    ).order_by('-end_date')
+#     elections = Election.objects.filter(
+#         end_date__lte=timezone.now(),
+#         results_published=True 
+#     ).order_by('-end_date')
 
-    results_data = []
-    for election in elections:
-        votes = (
-            Vote.objects.filter(election=election)
-            .values('candidate__name', 'candidate__party__name')
-            .annotate(vote_count=Count('id')).order_by('-vote_count')
-        )
-        total_votes = sum(v['vote_count'] for v in votes)
-        processed_votes = []
-        for v in votes:
-            percentage = round((v['vote_count'] / total_votes) * 100, 2) if total_votes > 0 else 0
-            processed_votes.append({
-                'candidate_name': v['candidate__name'],
-                'party_name': v['candidate__party__name'],
-                'votes': v['vote_count'],
-                'percentage': percentage
-            })
-        results_data.append({'election': election, 'total_votes': total_votes, 'results': processed_votes})
+#     results_data = []
+#     for election in elections:
+#         votes = (
+#             Vote.objects.filter(election=election)
+#             .values('candidate__name', 'candidate__party__name')
+#             .annotate(vote_count=Count('id')).order_by('-vote_count')
+#         )
+#         total_votes = sum(v['vote_count'] for v in votes)
+#         processed_votes = []
+#         for v in votes:
+#             percentage = round((v['vote_count'] / total_votes) * 100, 2) if total_votes > 0 else 0
+#             processed_votes.append({
+#                 'candidate_name': v['candidate__name'],
+#                 'party_name': v['candidate__party__name'],
+#                 'votes': v['vote_count'],
+#                 'percentage': percentage
+#             })
+#         results_data.append({'election': election, 'total_votes': total_votes, 'results': processed_votes})
 
-    return render(request, 'voter/view_results.html', {'results_data': results_data})
+#     return render(request, 'voter/view_results.html', {'results_data': results_data})
 
 def voter_view_results_election(request, election_id):
 
@@ -504,26 +504,36 @@ def admin_dashboard(request):
     total_voters = Voter.objects.count()
     total_candidates = Candidate.objects.count()
     total_elections = Election.objects.count()
-    pending_voters = Voter.objects.filter(is_verified=False)
+    pending_voters = Voter.objects.filter(verification_status='pending')
 
-    # 2. Fetch Active Elections
-    elections = Election.objects.all().order_by('-start_date')
+    # Fetch all objects for detail view
+    all_candidates = Candidate.objects.select_related('party', 'user').all()
+    all_voters = Voter.objects.select_related('user').all()
+    all_elections = Election.objects.all().order_by('-start_date')
 
     context = {
         'total_voters': total_voters,
         'total_candidates': total_candidates,
         'total_elections': total_elections,
         'pending_voters': pending_voters,
-        'elections': elections,
+        'elections': all_elections,
+        'all_candidates': all_candidates,  # ✅ pass candidates
+        'all_voters': all_voters,          # ✅ pass voters
     }
     return render(request, 'dashboards/admin_dashboard.html', context)
-
 @login_required
 def verify_voter(request, voter_id):
-    if not request.user.is_staff: return redirect('users_home')
-    
+    if request.method != 'POST':
+        return redirect('admin_dashboard')
+
+    if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied: Admins only.")
+        return redirect('users_home')
+
     voter = get_object_or_404(Voter, id=voter_id)
-    voter.is_verified = True
+    voter.verification_status = 'verified'
+    voter.verification_date = timezone.now()
+
     voter.save()
     
     # Notify the voter
@@ -538,8 +548,13 @@ def verify_voter(request, voter_id):
 
 @login_required
 def delete_voter(request, voter_id):
-    if not request.user.is_staff: return redirect('users_home')
-    
+    if request.method != 'POST':
+        return redirect('admin_dashboard')
+
+    if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied: Admins only.")
+        return redirect('users_home')
+
     voter = get_object_or_404(Voter, id=voter_id)
     user = voter.user
     voter.delete()
@@ -566,7 +581,7 @@ def delete_voter(request, voter_id):
 @login_required
 def create_election(request):
     # 1. Security Check
-    if not (request.user.is_superuser or request.user.is_staff or request.user.role == 'admin'):
+    if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
         messages.error(request, "Access Denied.")
         return redirect('users_home')
 
@@ -604,8 +619,10 @@ def create_election(request):
     return render(request, 'admin/create_election.html', {'form': form})
 @login_required
 def toggle_election(request, election_id):
-    if not request.user.is_staff: return redirect('users_home')
-    
+    if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied: Admins only.")
+        return redirect('users_home')
+
     election = get_object_or_404(Election, id=election_id)
     election.is_active = not election.is_active # Switch True/False
     election.save()
@@ -616,8 +633,10 @@ def toggle_election(request, election_id):
 
 @login_required
 def publish_results(request, election_id):
-    if not request.user.is_staff: return redirect('users_home')
-    
+    if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied: Admins only.")
+        return redirect('users_home')
+
     election = get_object_or_404(Election, id=election_id)
     election.results_published = True
     election.save()

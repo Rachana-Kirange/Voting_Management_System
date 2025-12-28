@@ -48,7 +48,7 @@ class CandidateAdmin(admin.ModelAdmin):
 
 @admin.register(Vote)
 class VoteAdmin(admin.ModelAdmin):
-    list_display = ('voter', 'candidate', 'election', 'date')
+    list_display = ('id', 'voter', 'candidate', 'election')
     list_filter = ('election', 'candidate__party')
 
 @admin.register(Campaign)

@@ -39,4 +39,8 @@ urlpatterns = [
     path('admin/create-election/', views.create_election, name='create_election'),
     path('admin/toggle-election/<int:election_id>/', views.toggle_election, name='toggle_election'),
     path('admin/publish-results/<int:election_id>/', views.publish_results, name='publish_results'),
+    path('admin/delete-election/<int:election_id>/', views.delete_election, name='delete_election'), 
+    path('admin/approve-candidate/<int:candidate_id>/', views.approve_candidate, name='approve_candidate'),
+    path('admin/delete-candidate/<int:candidate_id>/', views.delete_candidate, name='delete_candidate'),
+    path('admin/voters/', views.admin_voter_management, name='admin_voter_management'),
 ]

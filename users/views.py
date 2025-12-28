@@ -2,6 +2,10 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth import authenticate, login, logout, get_user_model
 from django.contrib import messages
 from .forms import ElectionForm
+from django.db.models import Q
+from django.db import transaction 
+# ✅ ADD THIS LINE:
+from django.contrib.admin.models import LogEntry
 from django.contrib.auth.views import (
     PasswordResetView, PasswordResetDoneView,
     PasswordResetConfirmView, PasswordResetCompleteView
@@ -13,8 +17,8 @@ from django.core.paginator import Paginator
 from django.db.models import Count
 
 from .models import Party, Candidate, Voter, Vote, Election, Campaign, Notification
-from .forms import VoterRegistrationForm, CampaignForm
-
+from .forms import VoterRegistrationForm, CampaignForm, ElectionForm
+User = get_user_model()
 
 def home_view(request):
     return render(request, 'home.html')
@@ -23,7 +27,7 @@ def login_page(request):
     if request.user.is_authenticated:
         # Redirect admins to the default Django admin panel
         if request.user.is_superuser or request.user.is_staff:
-            return redirect('/admin/')
+            return redirect('/admin_dashboard/')
         return redirect('users_home')
 
     if request.method == 'POST':
@@ -37,7 +41,7 @@ def login_page(request):
             
             # Check role after login
             if user.is_superuser or user.is_staff:
-                return redirect('/admin/')
+                return redirect('/admin_dashboard/')
             return redirect('users_home')
         else:
             messages.error(request, "Invalid username or password.")
@@ -517,10 +521,12 @@ def admin_dashboard(request):
         'total_elections': total_elections,
         'pending_voters': pending_voters,
         'elections': all_elections,
-        'all_candidates': all_candidates,  # ✅ pass candidates
-        'all_voters': all_voters,          # ✅ pass voters
+        'all_candidates': all_candidates,  
+        'all_voters': all_voters,          
     }
     return render(request, 'dashboards/admin_dashboard.html', context)
+
+
 @login_required
 def verify_voter(request, voter_id):
     if request.method != 'POST':
@@ -546,8 +552,8 @@ def verify_voter(request, voter_id):
     messages.success(request, f"Voter {voter.user.username} has been verified.")
     return redirect('admin_dashboard')
 
-@login_required
-def delete_voter(request, voter_id):
+# @login_required
+# def delete_voter(request, voter_id):
     if request.method != 'POST':
         return redirect('admin_dashboard')
 
@@ -580,7 +586,6 @@ def delete_voter(request, voter_id):
 
 @login_required
 def create_election(request):
-    # 1. Security Check
     if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
         messages.error(request, "Access Denied.")
         return redirect('users_home')
@@ -588,19 +593,16 @@ def create_election(request):
     if request.method == 'POST':
         form = ElectionForm(request.POST)
         if form.is_valid():
-            # 2. Save the Election first
+            
             election = form.save(commit=False)
             election.save()
             
-            # 3. Handle Selected Candidates
             selected_candidates = form.cleaned_data.get('candidates')
             if selected_candidates:
                 for candidate in selected_candidates:
-                    # A. Link Candidate to Election (Many-to-Many)
+            
                     candidate.elections.add(election)
                     
-                    # B. Auto-create a Campaign (So it shows in Voter Dashboard)
-                    # We check if a campaign already exists to avoid duplicates
                     Campaign.objects.get_or_create(
                         candidate=candidate,
                         election=election,
@@ -643,3 +645,125 @@ def publish_results(request, election_id):
     
     messages.success(request, f"Results for {election.title} have been published.")
     return redirect('admin_dashboard')
+
+@login_required
+def approve_candidate(request, candidate_id):
+    if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied.")
+        return redirect('users_home')
+
+    candidate = get_object_or_404(Candidate, id=candidate_id)
+    candidate.is_approved = True
+    candidate.save()
+    messages.success(request, f"Candidate {candidate.name} approved successfully.")
+    return redirect('admin_dashboard')
+
+@login_required
+def delete_candidate(request, candidate_id):
+    # Security check
+    if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied.")
+        return redirect('users_home')
+
+    candidate = get_object_or_404(Candidate, id=candidate_id)
+    name = candidate.name
+    # Delete the associated user account if needed, or just the candidate profile
+    # Here we delete the profile
+    candidate.delete()
+    messages.warning(request, f"Candidate {name} has been removed.")
+    return redirect('admin_dashboard')
+
+
+@login_required
+def delete_election(request, election_id):
+    if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied.")
+        return redirect('users_home')
+
+    election = get_object_or_404(Election, id=election_id)
+    title = election.title
+    election.delete()
+    messages.warning(request, f"Election '{title}' has been deleted.")
+    return redirect('admin_dashboard')
+    
+@login_required
+def admin_voter_management(request):
+    if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied.")
+        return redirect('users_home')
+
+    search_query = request.GET.get('q', '')
+    filter_status = request.GET.get('status', 'all')
+
+    voters = Voter.objects.select_related('user').all().order_by('-user__created_at')
+
+    if search_query:
+        voters = voters.filter(
+            Q(user__username__icontains=search_query) |
+            Q(user__email__icontains=search_query) |
+            Q(voter_id__icontains=search_query) |
+            Q(mobile_no__icontains=search_query)
+        )
+
+    if filter_status == 'verified':
+        voters = voters.filter(verification_status='verified')
+    elif filter_status == 'pending':
+        voters = voters.filter(verification_status='pending')
+
+    paginator = Paginator(voters, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'admin/manage_voters.html', {
+        'voters': page_obj,
+        'search_query': search_query,
+        'filter_status': filter_status,
+        'total_count': voters.count()
+    })
+
+@login_required
+def verify_voter(request, voter_id):
+    if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
+        return redirect('users_home')
+    
+    voter = get_object_or_404(Voter, id=voter_id)
+    voter.verification_status = 'verified'
+    voter.verification_date = timezone.now()
+    voter.save()
+    
+    Notification.objects.create(
+        voter=voter, 
+        title="Account Verified",
+        message="Your account has been verified. You can now vote.", 
+        notification_type="verification"
+    )
+    
+    messages.success(request, f"Voter {voter.user.username} verified successfully.")
+    return redirect(request.META.get('HTTP_REFERER', 'admin_voter_management'))
+
+@login_required
+def delete_voter(request, voter_id):
+    if not (request.user.is_superuser or request.user.is_staff or getattr(request.user, 'role', '') == 'admin'):
+        messages.error(request, "Access Denied.")
+        return redirect('users_home')
+
+    try:
+        with transaction.atomic():
+            voter = get_object_or_404(Voter, id=voter_id)
+            user = voter.user
+            username = user.username
+
+            Vote.objects.filter(voter=voter).delete()
+            Notification.objects.filter(voter=voter).delete()
+
+            LogEntry.objects.filter(user_id=user.pk).delete()
+            voter.delete()
+            user.delete()
+
+            messages.warning(request, f"Voter account for {username} successfully deleted.")
+
+    except Exception as e:
+        print(f"Delete Error: {e}") 
+        messages.error(request, f"Could not delete voter: {e}")
+    
+    return redirect(request.META.get('HTTP_REFERER', 'admin_voter_management'))

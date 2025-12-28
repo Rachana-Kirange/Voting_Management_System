@@ -74,3 +74,29 @@ class ElectionForm(forms.ModelForm):
         self.fields['candidates'].queryset = Candidate.objects.all()
         # Optional: Custom label for the checkboxes
         self.fields['candidates'].label_from_instance = lambda obj: f"{obj.name} ({obj.party.name})"
+
+# --- 5. Voter Profile Update Form ---from django import forms
+from django.contrib.auth.models import User
+from .models import Voter
+
+class ProfileUpdateForm(forms.ModelForm):
+    phone = forms.CharField(
+        max_length=10,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+
+    class Meta:
+        model = User
+        fields = ['first_name', 'last_name', 'email']
+
+    def clean_phone(self):
+        phone = self.cleaned_data.get('phone')
+
+        if not phone.isdigit():
+            raise forms.ValidationError("Phone number must contain only digits")
+
+        if len(phone) != 10:
+            raise forms.ValidationError("Phone number must be exactly 10 digits")
+
+        return phone

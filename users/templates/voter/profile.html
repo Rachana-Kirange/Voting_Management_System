@@ -173,7 +173,7 @@
                         <div class="info-icon"><i class="fas fa-phone"></i></div>
                         <div>
                             <small class="text-muted d-block">Mobile Number</small>
-                            <span class="fw-bold text-dark">{{ voter.mobile|default:"Not Provided" }}</span>
+                            <span class="fw-bold text-dark">{{ voter.mobile_no|default:"Not Provided" }}</span>
                         </div>
                     </div>
 
@@ -189,7 +189,10 @@
 
             <div class="profile-card p-4">
                 <h6 class="fw-bold text-secondary text-uppercase small mb-3">Quick Actions</h6>
-                
+                <a href="?edit=true" class="action-btn">
+                     <i class="fas fa-user-edit text-success"></i> Update Profile
+                </a>
+
                 <a href="{% url 'voter_elections_list' %}" class="action-btn">
                     <i class="fas fa-vote-yea text-primary"></i> Vote Now
                 </a>
@@ -215,7 +218,49 @@
         </div>
 
         <div class="col-lg-8">
-            
+            {% if request.GET.edit %}
+<div class="card border-0 shadow-sm rounded-4 profile-card mb-4">
+    <div class="card-header bg-white p-4 border-bottom">
+        <h5 class="fw-bold mb-0 text-dark">
+            <i class="fas fa-user-edit text-success me-2"></i> Update Profile
+        </h5>
+    </div>
+
+    <div class="card-body p-4">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Email</label>
+                <input type="email" name="email" class="form-control"
+                       value="{{ voter.user.email }}" required>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Mobile Number</label>
+                <input type="text" name="mobile_no" class="form-control"
+                       value="{{ voter.mobile_no }}" pattern="[6-9]{1}[0-9]{9}"
+                       title="Enter valid 10-digit mobile number">
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label fw-bold">Address</label>
+                <textarea name="address" class="form-control" rows="3">{{ voter.address }}</textarea>
+            </div>
+
+            <div class="d-flex gap-2">
+                <button type="submit" class="btn btn-success rounded-pill px-4">
+                    Save Changes
+                </button>
+                <a href="{% url 'voter_profile' %}" class="btn btn-outline-secondary rounded-pill px-4">
+                    Cancel
+                </a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endif %}
+
             <div class="row g-3 mb-4">
                 <div class="col-md-6">
                     <div class="card border-0 shadow-sm p-3 d-flex flex-row align-items-center rounded-4 profile-card">

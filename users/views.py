@@ -240,23 +240,33 @@ def voter_register(request):
         form = VoterRegistrationForm()
     return render(request, 'users/voter_register.html', {'form': form})
 
+from .forms import ProfileUpdateForm
+
+@login_required
 def voter_profile(request):
-    if not request.user.is_authenticated:
-        return redirect('login')
-    try:
-        voter = Voter.objects.get(user=request.user)
-    except Voter.DoesNotExist:
-        messages.warning(request, 'Please complete your voter registration.')
-        return redirect('voter_register')
-    
-    user_votes = Vote.objects.filter(voter=voter).select_related('election', 'candidate')
-    
-    ctx = {
-        'voter': voter,
-        'user_votes': user_votes,
-        'unread_notifications': voter.notifications.filter(is_read=False).count(),
+    voter = Voter.objects.get(user=request.user)
+
+    if request.method == "POST":
+        request.user.email = request.POST.get("email")
+        request.user.save()
+        mobile_no = request.POST.get("mobile_no")
+        if mobile_no:
+            voter.mobile_no = mobile_no
+        voter.address = request.POST.get("address")
+        voter.save()
+
+        return redirect("voter_profile")
+
+    context = {
+        "voter": voter,
+        "user_votes": Vote.objects.filter(voter=voter),
+        "unread_notifications": Notification.objects.filter(
+            voter=voter, is_read=False
+        ).count(),
     }
-    return render(request, 'voter/profile.html', ctx)
+
+    return render(request, 'voter/profile.html', context)
+
 
 def voter_elections_list(request):
     if not request.user.is_authenticated:
@@ -527,47 +537,47 @@ def admin_dashboard(request):
     return render(request, 'dashboards/admin_dashboard.html', context)
 
 
-@login_required
-def verify_voter(request, voter_id):
-    if request.method != 'POST':
-        return redirect('admin_dashboard')
-
-    if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
-        messages.error(request, "Access Denied: Admins only.")
-        return redirect('users_home')
-
-    voter = get_object_or_404(Voter, id=voter_id)
-    voter.verification_status = 'verified'
-    voter.verification_date = timezone.now()
-
-    voter.save()
-    
-    # Notify the voter
-    Notification.objects.create(
-        voter=voter,
-        title="Account Verified",
-        message="Your account has been verified. You can now vote in active elections.",
-        notification_type="alert"
-    )
-    messages.success(request, f"Voter {voter.user.username} has been verified.")
-    return redirect('admin_dashboard')
-
 # @login_required
-# def delete_voter(request, voter_id):
-    if request.method != 'POST':
-        return redirect('admin_dashboard')
+# def verify_voter(request, voter_id):
+#     if request.method != 'POST':
+#         return redirect('admin_dashboard')
 
-    if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
-        messages.error(request, "Access Denied: Admins only.")
-        return redirect('users_home')
+#     if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+#         messages.error(request, "Access Denied: Admins only.")
+#         return redirect('users_home')
 
-    voter = get_object_or_404(Voter, id=voter_id)
-    user = voter.user
-    voter.delete()
-    user.delete() # Delete the login account too
+#     voter = get_object_or_404(Voter, id=voter_id)
+#     voter.verification_status = 'verified'
+#     voter.verification_date = timezone.now()
+
+#     voter.save()
     
-    messages.warning(request, "Voter removed from system.")
-    return redirect('admin_dashboard')
+#     # Notify the voter
+#     Notification.objects.create(
+#         voter=voter,
+#         title="Account Verified",
+#         message="Your account has been verified. You can now vote in active elections.",
+#         notification_type="alert"
+#     )
+#     messages.success(request, f"Voter {voter.user.username} has been verified.")
+#     return redirect('admin_dashboard')
+
+# # @login_required
+# # def delete_voter(request, voter_id):
+#     if request.method != 'POST':
+#         return redirect('admin_dashboard')
+
+#     if not (request.user.is_staff or request.user.is_superuser or getattr(request.user, 'role', '') == 'admin'):
+#         messages.error(request, "Access Denied: Admins only.")
+#         return redirect('users_home')
+
+#     voter = get_object_or_404(Voter, id=voter_id)
+#     user = voter.user
+#     voter.delete()
+#     user.delete() # Delete the login account too
+    
+#     messages.warning(request, "Voter removed from system.")
+#     return redirect('admin_dashboard')
 
 # @login_required
 # def create_election(request):

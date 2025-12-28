@@ -33,7 +33,7 @@ urlpatterns = [
     path('reset/<uidb64>/<token>/', views.CustomPasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('reset_password_complete/', views.CustomPasswordResetCompleteView.as_view(), name='password_reset_complete'),
 
-    path('admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
+    path('dashboards/admin-dashboard/', views.admin_dashboard, name='admin_dashboard'),
     path('admin/verify-voter/<int:voter_id>/', views.verify_voter, name='verify_voter'),
     path('admin/delete-voter/<int:voter_id>/', views.delete_voter, name='delete_voter'),
     path('admin/create-election/', views.create_election, name='create_election'),

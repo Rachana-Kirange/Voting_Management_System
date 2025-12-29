@@ -122,7 +122,7 @@
                             <tr>
                                 <th class="py-3 ps-4">Election Title</th>
                                 <th class="py-3">Party</th>
-                                <th class="py-3">Slogan</th>
+                                <!-- <th class="py-3">Slogan</th> -->
                                 <th class="py-3 text-end pe-4">Status</th>
                             </tr>
                         </thead>
@@ -138,9 +138,9 @@
                                             {{ candidate.party.name }}
                                         </span>
                                     </td>
-                                    <td class="text-muted text-truncate" style="max-width: 250px;">
+                                    <!-- <td class="text-muted text-truncate" style="max-width: 250px;">
                                         {{ campaign.slogan|default:"No slogan set" }}
-                                    </td>
+                                    </td> -->
                                     <td class="text-end pe-4">
                                         {% if campaign.election.is_active %}
                                             <span class="badge bg-success-subtle text-success border border-success px-3">Active</span>

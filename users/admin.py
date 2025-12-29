@@ -10,28 +10,75 @@ class CustomUserAdmin(DjangoUserAdmin):
     form = CustomUserChangeForm
     model = CustomUser
 
-    list_display = ('username', 'email', 'role', 'is_staff', 'is_active')
-    list_filter = ('role', 'is_staff', 'is_active')
+    list_display = (
+        'username',
+        'email',
+        'role',
+        'is_admin_approved',
+        'is_staff',
+        'is_active',
+    )
+
+    list_filter = (
+        'role',
+        'is_admin_approved',
+        'is_staff',
+        'is_active',
+    )
+
     search_fields = ('username', 'email')
     ordering = ('username',)
 
     fieldsets = (
-        (None, {'fields': ('username', 'email', 'full_name', 'password')}),
+        (None, {
+            'fields': ('username', 'email', 'full_name', 'password')
+        }),
+
+        ('Role & Approval', {
+            'fields': ('role', 'is_admin_approved')
+        }),
+
         ('Permissions', {
             'fields': (
-                'role', 'is_staff', 'is_active',
-                'is_superuser', 'groups', 'user_permissions'
+                'is_staff',
+                'is_active',
+                'is_superuser',
+                'groups',
+                'user_permissions',
             )
         }),
-        ('Important dates', {'fields': ('last_login',)}),
+
+        ('Important dates', {
+            'fields': ('last_login',)
+        }),
     )
 
     add_fieldsets = (
         (None, {
             'classes': ('wide',),
-            'fields': ('username', 'email', 'full_name', 'role', 'password1', 'password2'),
+            'fields': (
+                'username',
+                'email',
+                'full_name',
+                'role',
+                'password1',
+                'password2',
+            ),
         }),
     )
+    actions = ['approve_candidates', 'reject_candidates']
+
+    def approve_candidates(self, request, queryset):
+        queryset.filter(role='candidate').update(is_admin_approved=True)
+        self.message_user(request, "Selected candidates have been APPROVED.")
+
+    def reject_candidates(self, request, queryset):
+        queryset.filter(role='candidate').update(is_admin_approved=False)
+        self.message_user(request, "Selected candidates have been REJECTED.")
+
+    approve_candidates.short_description = "Approve selected candidates"
+    reject_candidates.short_description = "Reject selected candidates"
+
 
 
 @admin.register(Voter)
@@ -42,7 +89,7 @@ class VoterAdmin(admin.ModelAdmin):
     actions = ['verify_voters']
 
     def verify_voters(self, request, queryset):
-        queryset.update(is_verified=True)
+        queryset.update(verification_status='verified')
         self.message_user(request, "Selected voters have been verified.")
     verify_voters.short_description = "Mark selected voters as Verified"
 

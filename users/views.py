@@ -27,7 +27,7 @@ def login_page(request):
     if request.user.is_authenticated:
         # Redirect admins to the default Django admin panel
         if request.user.is_superuser or request.user.is_staff:
-            return redirect('/admin_dashboard/')
+            return redirect('admin_dashboard')
         return redirect('users_home')
 
     if request.method == 'POST':
@@ -41,7 +41,7 @@ def login_page(request):
             
             # Check role after login
             if user.is_superuser or user.is_staff:
-                return redirect('/admin_dashboard/')
+                return redirect('admin_dashboard')
             return redirect('users_home')
         else:
             messages.error(request, "Invalid username or password.")
@@ -118,12 +118,16 @@ def register_page(request):
             user = User.objects.create_user(
                 username=username, email=email or '', password=password1
             )
-            if hasattr(user, 'role') and role:
-                user.role = role
-            if hasattr(user, 'full_name') and full_name:
-                user.full_name = full_name
-            user.save()
+            # Set common fields
+            user.role = role
+            user.full_name = full_name
 
+            # 🔐 ADMIN-SPECIFIC SECURITY
+            if role == 'admin':
+                user.is_staff = True              # needed to mark as admin-type user
+                user.is_admin_approved = False    # 🚫 superuser must approve
+
+            user.save() 
             # 2. Automatically create the Profile based on Role
             if role == 'candidate':
                 # FIX: Get or create a default "Independent" party to satisfy the database rule
@@ -195,6 +199,20 @@ def my_campaigns(request):
 
 @login_required
 def create_campaign(request):
+    user = request.user
+
+    # 🚫 Only candidates allowed
+    if user.role != 'candidate':
+        messages.error(request, "Only candidates can create campaigns.")
+        return redirect('users_home')
+
+    # 🚫 Candidate not approved by admin
+    if not user.is_admin_approved:
+        messages.warning(
+            request,
+            "Your candidate account is not verified yet. Please wait for admin approval."
+        )
+        return redirect('candidate_dashboard')
     candidate = get_object_or_404(Candidate, user=request.user)
     if request.method == 'POST':
         form = CampaignForm(request.POST)
@@ -202,6 +220,7 @@ def create_campaign(request):
             campaign = form.save(commit=False)
             campaign.candidate = candidate
             campaign.save()
+            messages.success(request, "Campaign created successfully.")
             return redirect('my_campaigns')
     else:
         form = CampaignForm()
@@ -244,17 +263,28 @@ from .forms import ProfileUpdateForm
 
 @login_required
 def voter_profile(request):
-    voter = Voter.objects.get(user=request.user)
+    # ✅ Safe retrieval of Voter object
+    try:
+        voter = Voter.objects.get(user=request.user)
+    except Voter.DoesNotExist:
+        messages.warning(
+            request,
+            "You are not registered as a voter. Please complete voter registration first."
+        )
+        return redirect('voter_register')  # redirect to voter registration page
 
     if request.method == "POST":
         request.user.email = request.POST.get("email")
         request.user.save()
+
         mobile_no = request.POST.get("mobile_no")
         if mobile_no:
             voter.mobile_no = mobile_no
+
         voter.address = request.POST.get("address")
         voter.save()
 
+        messages.success(request, "Profile updated successfully.")
         return redirect("voter_profile")
 
     context = {
@@ -266,6 +296,7 @@ def voter_profile(request):
     }
 
     return render(request, 'voter/profile.html', context)
+
 
 
 def voter_elections_list(request):
@@ -319,6 +350,23 @@ def voter_view_campaigns(request, election_id):
 def voter_cast_vote(request, election_id):
     if request.method != "POST":
         return redirect('voter_elections_list')
+    
+    user = request.user
+
+    # 🚫 Admin cannot vote
+    if user.role == 'admin':
+        messages.error(request, "Admins are not allowed to vote.")
+        return redirect('users_home')
+
+    # 🚫 Candidate cannot vote
+    if user.role == 'candidate':
+        messages.error(request, "Candidates are not allowed to vote.")
+        return redirect('candidate_dashboard')
+
+    # 🚫 Only voters allowed
+    if user.role != 'voter':
+        messages.error(request, "Only voters can vote.")
+        return redirect('users_home')
 
     election = get_object_or_404(Election, pk=election_id)
     voter = get_object_or_404(Voter, user=request.user)
@@ -335,6 +383,14 @@ def voter_cast_vote(request, election_id):
     candidate_id = request.POST.get('candidate_id')
     candidate = get_object_or_404(Candidate, pk=candidate_id)
 
+    # 🚫 Candidate not approved by admin
+    if not candidate.is_approved:
+        messages.error(
+            request,
+            "This candidate is not approved by admin yet."
+        )
+        return redirect('voter_elections_list')
+    
     vote = Vote.objects.create(voter=voter, candidate=candidate, election=election)
     Notification.objects.create(
         voter=voter, title="Vote Submitted",
@@ -474,15 +530,29 @@ def voter_view_results(request):
 
 @login_required
 def candidate_dashboard(request):
-    if hasattr(request.user, 'role') and request.user.role != 'candidate':
+     # 🚫 Not a candidate
+    if request.user.role != 'candidate':
         messages.error(request, "Access restricted to candidates only.")
         return redirect('users_home')
+
     try:
         candidate = Candidate.objects.get(user=request.user)
     except Candidate.DoesNotExist:
-        messages.warning(request, "Your Candidate Profile is not set up yet. Please contact the Admin.")
+        messages.warning(
+            request,
+            "Your candidate profile is not created yet. Please contact admin."
+        )
         return redirect('users_home')
-
+    #  # 🚫 Candidate exists but NOT approved
+    # if not candidate.is_approved or not request.user.is_admin_approved:
+    #     messages.warning(
+    #         request,
+    #         "Your candidate account is pending admin verification."
+    #     )
+    #     return render(
+    #         request,
+    #         'candidate/pending_approval.html'
+    #     )
     campaigns = Campaign.objects.filter(candidate=candidate)
 
     return render(request, 'candidate/dashboard.html', {
@@ -507,22 +577,38 @@ class CustomPasswordResetConfirmView(PasswordResetConfirmView):
 class CustomPasswordResetCompleteView(PasswordResetCompleteView):
     template_name = 'registration/password_reset_complete.html'
 
+
 @login_required
 def admin_dashboard(request):
-    # Security Check: Only allow superusers or staff
-    if not (request.user.is_superuser or request.user.is_staff or request.user.role == 'admin'):
-        messages.error(request, "Access Denied: Admins only.")
-        return redirect('users_home')
 
-    # 1. Fetch Stats
+    user = request.user
+
+    # 🚫 Not admin or superuser
+    if user.role != 'admin' and not user.is_superuser:
+        messages.error(request, "Access denied. Admins only.")
+        return redirect('voter_dashboard')  # change if your voter dashboard name differs
+
+    # 🚫 Admin but NOT approved by superuser
+    if user.role == 'admin' and not user.is_admin_approved:
+        messages.warning(
+            request,
+            "Your admin account is not verified yet. Please wait for superuser approval."
+        )
+        return redirect('voter_dashboard')  # safe page
+
+    # ✅ Approved admin OR superuser
     total_voters = Voter.objects.count()
     total_candidates = Candidate.objects.count()
     total_elections = Election.objects.count()
     pending_voters = Voter.objects.filter(verification_status='pending')
+    
+    pending_admins = User.objects.filter(
+    role='admin',
+    is_admin_approved=False
+)
 
-    # Fetch all objects for detail view
-    all_candidates = Candidate.objects.select_related('party', 'user').all()
-    all_voters = Voter.objects.select_related('user').all()
+    all_candidates = Candidate.objects.select_related('party', 'user')
+    all_voters = Voter.objects.select_related('user')
     all_elections = Election.objects.all().order_by('-start_date')
 
     context = {
@@ -531,9 +617,12 @@ def admin_dashboard(request):
         'total_elections': total_elections,
         'pending_voters': pending_voters,
         'elections': all_elections,
-        'all_candidates': all_candidates,  
-        'all_voters': all_voters,          
+        'all_candidates': all_candidates,
+        'all_voters': all_voters,
+        'pending_admins': pending_admins,
+
     }
+
     return render(request, 'dashboards/admin_dashboard.html', context)
 
 
@@ -663,10 +752,19 @@ def approve_candidate(request, candidate_id):
         return redirect('users_home')
 
     candidate = get_object_or_404(Candidate, id=candidate_id)
+    
+    # Approve candidate profile
     candidate.is_approved = True
     candidate.save()
+
+    # ✅ Approve the linked user as well
+    user = candidate.user
+    user.is_admin_approved = True
+    user.save()
+
     messages.success(request, f"Candidate {candidate.name} approved successfully.")
     return redirect('admin_dashboard')
+
 
 @login_required
 def delete_candidate(request, candidate_id):
@@ -777,3 +875,21 @@ def delete_voter(request, voter_id):
         messages.error(request, f"Could not delete voter: {e}")
     
     return redirect(request.META.get('HTTP_REFERER', 'admin_voter_management'))
+
+
+@login_required
+def approve_admin(request, user_id):
+    if not request.user.is_superuser:
+        messages.error(request, "Only superuser can approve admins.")
+        return redirect('users_home')
+
+    admin_user = get_object_or_404(User, id=user_id, role='admin')
+
+    admin_user.is_admin_approved = True
+    admin_user.save()
+
+    messages.success(
+        request,
+        f"Admin access approved for {admin_user.username}"
+    )
+    return redirect('admin_dashboard')

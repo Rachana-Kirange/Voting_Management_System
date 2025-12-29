@@ -51,12 +51,14 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
         ("candidate", "Candidate"),
     ]
 
+    
     user_id = models.AutoField(primary_key=True)
     username = models.CharField(max_length=150, unique=True)
     full_name = models.CharField(max_length=255, blank=True, null=True)
     email = models.EmailField(unique=True)
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default="voter")
 
+    is_admin_approved = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)

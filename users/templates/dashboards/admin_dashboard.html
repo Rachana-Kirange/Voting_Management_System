@@ -63,6 +63,66 @@
             <i class="fas fa-plus-circle me-2"></i> Create Election
         </a>
     </div>
+{% if request.user.is_superuser %}
+<div class="row mb-4">
+    <div class="col-12">
+        <div class="control-card">
+            <div class="control-header">
+                <h5 class="fw-bold mb-0 text-dark">
+                    <i class="fas fa-user-shield me-2 text-danger"></i>
+                    Pending Admin Approvals
+                </h5>
+                {% if pending_admins %}
+                    <span class="badge bg-danger rounded-pill px-3">
+                        {{ pending_admins.count }} Waiting
+                    </span>
+                {% endif %}
+            </div>
+
+            <div class="card-body p-0 scroll-box">
+                {% if pending_admins %}
+                <table class="table table-custom mb-0">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th class="text-end">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for admin in pending_admins %}
+                        <tr>
+                            <td>
+                                <div class="d-flex align-items-center">
+                                    <div class="user-initial bg-danger bg-opacity-10 text-danger">
+                                        {{ admin.username|slice:":1"|upper }}
+                                    </div>
+                                    <span class="fw-bold text-dark">
+                                        {{ admin.username }}
+                                    </span>
+                                </div>
+                            </td>
+                            <td class="text-muted">{{ admin.email }}</td>
+                            <td class="text-end">
+                                <a href="{% url 'approve_admin' admin.id %}"
+                                   class="btn btn-sm btn-success rounded-pill px-3">
+                                   Approve
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                <div class="text-center py-4">
+                    <p class="text-muted mb-0">No pending admin requests.</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
 
     <div class="row g-4 mb-5">
 <div class="col-xl-3 col-md-6">
